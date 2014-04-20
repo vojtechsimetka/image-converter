@@ -1,0 +1,26 @@
+Usage:
+
+/imgConvertor [in_file] [options] [out_types]
+
+[in_file]    Any of following images both grayscale and RGB:
+                 bmp, dib, jpeg, jpg, jpe, jp2, png, pbm, pgm,
+                 ppm, sr, ras, tiff, tif, gif
+
+[options]    -s x y            size of output in %
+             -r width height   width and height of the output image
+             -d                display output
+             -g                convert to grayscale
+             -o folder         output folder
+
+[out_types] bmp, dib           Windows bitmaps
+            jpeg, jpg, jpe     JPEG format
+            jp2                JPEG 2000 format
+            png                Portable Network Graphics
+            pbm, pgm, ppm      Portable image format
+            sr, ras            Sun rasters
+            tiff, tif          TIFF format
+            gif                GIF format using custom implementation
+
+NOTE: Some input and output files' formats may require additional codecs on
+Linux and BSD systems. Search for following libraries: libjpeg, libpng, libtiff
+and libjasper.
