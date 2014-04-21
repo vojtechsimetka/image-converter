@@ -12,10 +12,11 @@
 /**
  * @brief Detects if input file is GIF
  * @param filename Filename
- * @return
+ * @return True if gif was recognized
  */
 bool ImageProcessing::isGif(const string &filename)
 {
+	// Tries to open file
     FILE * fp = fopen(filename.c_str(), "rb");
 
     if (fp == 0)
@@ -25,6 +26,8 @@ bool ImageProcessing::isGif(const string &filename)
     }
 
     char gif[3];
+	
+	// Reads frist three bytes
     int i = fread(&gif, sizeof(char), 3, fp);
 
     fclose(fp);
@@ -35,6 +38,7 @@ bool ImageProcessing::isGif(const string &filename)
         exit(EXIT_FAILURE);
     }
 
+	// Tests if its a GIF
     if (strcmp(gif, "GIF") == 0)
         return true;
 
@@ -48,7 +52,6 @@ bool ImageProcessing::isGif(const string &filename)
 ImageProcessing::ImageProcessing(const string filename)
 {
     // TODO: Call GIF load function
-    // TODO: Detect if its GIF based on its content
     if (filename.length() >= 4 &&
         this->isGif(filename))
     {

@@ -1,10 +1,10 @@
-CXXFLAGS=`pkg-config --cflags opencv`
-LDFLAGS=`pkg-config --libs opencv`
 
 # Makefile
 # @author: xsimet00
+# @author: xskota05
+# @author: xsirok07
 
-PROGRAM=filter
+PROGRAM=ImageConvertor
 ARCHIVE=xsimet00.zip
 
 CC=g++
@@ -36,12 +36,18 @@ $(PROGRAM): $(OBJFILES)
 run: $(PROGRAM)
 	./$(PROGRAM)
 
+# Pack
 pack: clean
 	@rm -f $(ARCHIVE)
 	zip -r $(ARCHIVE) *.h *.cpp Makefile README documentation.pdf $(DOXCONF)
 
+# Clean
 clean:
-	@rm -rf $(ARCHIVE) *.o $(TEST_FOLDER) $(DOXOUT) $(PROGRAM)
+	@rm -rf $(ARCHIVE) *.o $(TEST_FOLDER) $(DOXOUT) $(PROGRAM) test
 
+test:
+	./test.sh
+
+# Doc
 doc: *.cpp *.h $(DOXCONF)
 	@doxygen $(DOXCONF)
