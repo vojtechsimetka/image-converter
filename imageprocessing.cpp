@@ -57,20 +57,14 @@ ImageProcessing::ImageProcessing(const string filename)
 {
     // TODO: Call GIF load function
     if (this->isGif(filename))
-    {
-        cerr << "IMPLEMENT GIF LOAD FUNCTION" << endl;
         this->image = loadGif(filename);
-    }
 
     else
         this->image = imread(filename);
 
     // Failed to load data
     if (this->image.total() == 0)
-    {
-        cerr << "No image data in file: " << filename << endl;
-        exit(EXIT_FAILURE);
-    }
+        throw "No image data in file: " + filename;
 }
 
 /**
@@ -172,7 +166,7 @@ void ImageProcessing::save(const string & filename, set<enum img_type> & file_ty
         }
         catch (...)
         {
-            cerr << "Unable to save one of output files." << endl;
+            throw "Unable to save one of output files.";
         }
     }
 }
