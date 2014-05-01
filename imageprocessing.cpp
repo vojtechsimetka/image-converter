@@ -8,6 +8,16 @@
  */
 
 #include "imageprocessing.h"
+#include "gif2bmp.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <string.h>
+#include <inttypes.h>
+#include "constant.h"
+#include <fcntl.h>
 
 /**
  * @brief Detects if input file is GIF
@@ -20,10 +30,7 @@ bool ImageProcessing::isGif(const string &filename)
     FILE * fp = fopen(filename.c_str(), "rb");
 
     if (fp == 0)
-    {
-        cerr << "Unable to open file: " << filename << endl;
-        exit(EXIT_FAILURE);
-    }
+        throw "Unable to open file: " + filename;
 
     char gif[3];
 	
@@ -33,10 +40,7 @@ bool ImageProcessing::isGif(const string &filename)
     fclose(fp);
 
     if (i != 3)
-    {
-        cerr << "Error reading head of file: " << filename << endl;
-        exit(EXIT_FAILURE);
-    }
+        throw "Error reading head of file: " + filename;
 
 	// Tests if its a GIF
     if (strcmp(gif, "GIF") == 0)
@@ -52,11 +56,10 @@ bool ImageProcessing::isGif(const string &filename)
 ImageProcessing::ImageProcessing(const string filename)
 {
     // TODO: Call GIF load function
-    if (filename.length() >= 4 &&
-        this->isGif(filename))
+    if (this->isGif(filename))
     {
         cerr << "IMPLEMENT GIF LOAD FUNCTION" << endl;
-        // this->image = loadGif(filename);
+        this->image = loadGif(filename);
     }
 
     else

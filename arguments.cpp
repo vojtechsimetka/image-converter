@@ -16,7 +16,6 @@
  */
 Arguments::Arguments(int argc, const char *argv[])
 {
-    this->state = HELP;
     this->out = "";
     this->rsz = NONE;
     this->grayscale = false;
@@ -24,7 +23,10 @@ Arguments::Arguments(int argc, const char *argv[])
     this->out = "";
 
     if (argc < 3)
-        return;
+    {
+        this->printHelp();
+        throw "Incorect parameters";
+    }
 
     // Saves input file
     this->input_file = string(argv[1]);
@@ -39,7 +41,10 @@ Arguments::Arguments(int argc, const char *argv[])
 
             // Parameter -s must be followed by two double values
             if (i >= argc+1)
-                return;
+            {
+                this->printHelp();
+                throw "Incorect parameters";
+            }
 
             this->resize_percent_x = atof(argv[++i])/100;
             this->resize_percent_y = atof(argv[++i])/100;
@@ -52,7 +57,10 @@ Arguments::Arguments(int argc, const char *argv[])
 
             // Parameter -d must be followed by two integer values
             if (i >= argc+1)
-                return;
+            {
+                this->printHelp();
+                throw "Incorect parameters";
+            }
 
             this->width = atoi(argv[++i]);
             this->height = atoi(argv[++i]);
@@ -63,7 +71,10 @@ Arguments::Arguments(int argc, const char *argv[])
         {
             // Parameter -o must be followed by path
             if (i >= argc)
-                return;
+            {
+                this->printHelp();
+                throw "Incorect parameters";
+            }
 
             this->out = argv[++i];
 
@@ -125,13 +136,46 @@ Arguments::Arguments(int argc, const char *argv[])
                 this->output.insert(TIF);
 
             else
-                return;
+            {
+                this->printHelp();
+                throw "Incorect parameters";
+            }
         }
     }
 
     // Determines output path
     this->out += input_file.substr(0,input_file.find_last_of("."));
+}
 
-    // Parameters were succesfully parsed
-    this->state = OK;
+/**
+ * @brief Prints help
+ */
+void Arguments::printHelp()
+{
+    cout << "Usage:" << endl
+         << endl
+         << "/imgConvertor [in_file] [options] [out_types]" << endl
+         << endl
+         << "[in_file]    Any of following images both grayscale and RGB:" << endl
+         << "                 bmp, dib, jpeg, jpg, jpe, jp2, png, pbm, pgm," << endl
+         << "                 ppm, sr, ras, tiff, tif, gif" << endl
+         << endl
+         << "[options]    -s x y            size of output in %" << endl
+         << "             -r width height   width and height of the output image" << endl
+         << "             -d                display output" << endl
+         << "             -g                convert to grayscale" << endl
+         << "             -o folder         output folder" << endl
+         << endl
+         << "[out_types] bmp, dib           Windows bitmaps" << endl
+         << "            jpeg, jpg, jpe     JPEG format" << endl
+         << "            jp2                JPEG 2000 format" << endl
+         << "            png                Portable Network Graphics" << endl
+         << "            pbm, pgm, ppm      Portable image format" << endl
+         << "            sr, ras            Sun rasters" << endl
+         << "            tiff, tif          TIFF format" << endl
+         << "            gif                GIF format using custom implementation" << endl
+         << endl
+         << "NOTE: Some input and output files' formats may require additional codecs on" << endl
+         << "Linux and BSD systems. Search for following libraries: libjpeg, libpng, libtiff" << endl
+         << "and libjasper." << endl;
 }

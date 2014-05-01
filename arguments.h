@@ -15,15 +15,6 @@
 using namespace std;
 
 /**
- * @brief The argument parsing state enumerator
- */
-enum state
-{
-    HELP,
-    OK
-};
-
-/**
  * @brief The resize options enumerator
  */
 enum resize
@@ -59,7 +50,7 @@ enum img_type
  */
 class Arguments
 {
-    enum state state;
+private:
     string input_file;
     string out;
     enum resize rsz;
@@ -71,14 +62,10 @@ class Arguments
     bool display;
     set<enum img_type> output;
 
+    void printHelp();
+
 public:
     Arguments(int argc, const char *argv[]);
-
-    /**
-     * @brief Tests if arguments are specified correctly
-     * @return True if arguments are OK
-     */
-    inline bool stateOK() {return this->state == OK;}
 
     /**
      * @brief Gets input filename
