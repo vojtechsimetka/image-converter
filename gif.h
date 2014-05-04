@@ -18,8 +18,8 @@ int getPlainTextExt(FILE *inputFile);
 int getApplicationExt(FILE *inputFile);
 int getCommentExt(FILE *inputFile);
 int getImageDescriptor(FILE *inputFile, tIMAGE_DESCRIPTOR *imageDescriptor);
-void processColorList(tDIC_ITEM *list, tBGR **bmpOutputBuffer, tRGB *colorTable, tBMPWRITER *bmpWriter);
-void processColor(int color, tBGR **bmpOutputBuffer, tRGB *colorTable, tBMPWRITER *bmpWriter);
-int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **bitMap, 	tBMPWRITER *bmpWriter);
+void processColorList(tDIC_ITEM *list, Mat &bitMap, tRGB *colorTable, tBITMAPWRITER *bitMapWriter);
+void processColor(int color, Mat &bitMap, tRGB *colorTable, tBITMAPWRITER *bitMapWriter);
+int getImageData(FILE *inputFile, tGIFREADER *reader, Mat &bitMap, tBITMAPWRITER *bitMapWriter);
 
 #endif /* GIF_H_ */

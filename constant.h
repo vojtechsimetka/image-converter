@@ -13,10 +13,6 @@
 #include <sys/types.h>
 #include <stdint.h>
 
-typedef uint8_t u_int8_t;
-typedef uint16_t u_int16_t;
-typedef uint32_t u_int32_t;
-
 #define READ_WRITE_OK  						0
 #define READ_WRITE_ERR 						1
 #define END_OF_FILE 						2
@@ -59,9 +55,6 @@ typedef uint32_t u_int32_t;
 #define UNFINISHED_SUBBLOCK 				1
 #define FINISHING_SUBBLOCK 				    2
 
-#define GIF_CLEAN_CODE 						256
-#define GIF_END_OF_INFORMATION 				257
-
 #define _2_BITS_MAX_CODE 					3
 #define _3_BITS_MAX_CODE 					7
 #define _4_BITS_MAX_CODE 					15
@@ -77,20 +70,22 @@ typedef uint32_t u_int32_t;
 #define DICTIONARY_FULL		 				-1
 #define NUMBER_OF_COLORS		 			256
 
-#define GIFMASK_LOCAL_COLOR_PALETTE    			0x80
-#define GIFMASK_LOCAL_COLOR_PALETTE_SIZE        0x07
-#define GIFMASK_LOCAL_COLOR_PALETTE_SORT      	0x20
-#define GIFMASK_LOCAL_INTERLACE			        0x40
+#define GIFMASK_LOCAL_COLOR_PALETTE    		0x80
+#define GIFMASK_LOCAL_COLOR_PALETTE_SIZE    0x07
+#define GIFMASK_LOCAL_COLOR_PALETTE_SORT    0x20
+#define GIFMASK_LOCAL_INTERLACE			    0x40
 
-#define GIFMASK_GLOBAL_COLOR_PALETTE    		0x80
-#define GIFMASK_COLOR_BITS_PER_PIXEL    		0x70
-#define GIFMASK_COLOR_PALETTE_SORT      		0x08
-#define GIFMASK_GLOBAL_COLOR_PALETTE_SIZE       0x07
-#define GIF_MAX_CODE_WORD_LENGTH_IN_BITS        12
-#define COLOR_PALETTE_SIZE 						256
+#define GIFMASK_GLOBAL_COLOR_PALETTE    	0x80
+#define GIFMASK_COLOR_BITS_PER_PIXEL    	0x70
+#define GIFMASK_COLOR_PALETTE_SORT      	0x08
+#define GIFMASK_GLOBAL_COLOR_PALETTE_SIZE   0x07
+#define GIF_MAX_CODE_WORD_LENGTH_IN_BITS    12
 
-#define M_EXIT_FAILURE 							-1
+#define M_EXIT_FAILURE 						-1
 
+/**
+ * @brief GIF pixel structure
+ */
 
 typedef struct {
 	u_int8_t red;
@@ -98,22 +93,34 @@ typedef struct {
 	u_int8_t blue;
 } tRGB;
 
+/**
+ * @brief BMP pixel structure
+ */
 typedef struct {
 	u_int8_t blue;
 	u_int8_t green;
 	u_int8_t red;
 } tBGR;
 
+/**
+ * @brief Dictionary list item
+ */
 typedef struct colorListItem {
 	int colorTableIndex;
 	struct colorListItem *nextColor;
 } tLIST_ITEM;
 
+/**
+ * @brief Dictionary item
+ */
 typedef struct colorsList {
 	tLIST_ITEM *first;
 	tLIST_ITEM *last;
 } tDIC_ITEM;
 
+/**
+ * @brief Dictionary
+ */
 typedef struct {
 	tDIC_ITEM colors[DICTIONARY_MAX_SIZE];
 	int clearCode;
@@ -123,6 +130,9 @@ typedef struct {
 	int curMaxCode;
 } tDICTIONARY;
 
+/**
+ * @brief GIF reader struct
+ */
 typedef struct{
 	u_int8_t Byte1;
 	u_int8_t Byte2;
@@ -139,6 +149,9 @@ typedef struct{
 	tRGB *activeColorTable;
 } tGIFREADER;
 
+/**
+ * @brief BMP writer struct
+ */
 typedef struct{
 	u_int32_t actualRow;
 	u_int32_t actualColumn;
@@ -146,14 +159,20 @@ typedef struct{
 	u_int16_t actualWidth;
 	u_int32_t actualX;
 	u_int32_t actualY;
-} tBMPWRITER;
+} tBITMAPWRITER;
 
+/**
+ * @brief Conversion property struct
+ */
 typedef struct{
 	int64_t bmpSize;
-	//int64_t long gifSize;
+
 	int64_t gifSize;
 } tGIF2BMP;
 
+/**
+ * @brief Input picture property struct
+ */
 typedef struct{
 	u_int8_t widthInPixHighByte;
 	u_int8_t widthInPixLowByte;
@@ -167,14 +186,9 @@ typedef struct{
 	u_int8_t pixelAspectRatio;
 } tPIC_PROPERTY;
 
-typedef struct{
-	u_int8_t blockSize;
-	u_int8_t byte2;
-	u_int8_t byte3;
-	u_int8_t byte4;
-	u_int8_t byte5;
-} tGRAPHIC_CONTROL_EXT;
-
+/**
+ * @brief Image descriptor struct
+ */
 typedef struct{
 	u_int8_t leftPosHighByte;
 	u_int8_t leftPosLowByte;

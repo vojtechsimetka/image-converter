@@ -129,7 +129,8 @@ int copyLists(tDIC_ITEM *sourcelist, tDIC_ITEM *destlist)
  */
 void freeDictionary (tDICTIONARY *dictionary) {
 
-	for (int i = (dictionary->endOfInformationCode + 1); i < DICTIONARY_MAX_SIZE; i++) {
+	//for (int i = (dictionary->endOfInformationCode + 1); i < DICTIONARY_MAX_SIZE; i++) {
+	for (int i = 0; i < DICTIONARY_MAX_SIZE; i++) {
 		dealocateColorList(&(dictionary->colors[i]));
 	}
 }
@@ -142,7 +143,11 @@ void freeDictionary (tDICTIONARY *dictionary) {
  * @return 0 on success, 1 on failure
  */
 int initDictionary (tDICTIONARY *dictionary, tGIFREADER *reader) {
-
+	// Init dictionary pointers
+	for (int i = 0; i < DICTIONARY_MAX_SIZE; i++) {
+		dictionary->colors[i].first = NULL;
+		dictionary->colors[i].last = NULL;
+	}
 	// Insert color table into dictionary
 	int i;
 	for (i = 0; i < reader->activeColorTableSize; i++) {
@@ -240,12 +245,6 @@ int initDictionary (tDICTIONARY *dictionary, tGIFREADER *reader) {
 						dictionary->curMaxCode = _12_BITS_MAX_CODE;
 						break;
 		}
-	}
-
-	// Init rest of dictionary indexes
-	for (i = i + 2; i < DICTIONARY_MAX_SIZE; i++) {
-		dictionary->colors[i].first = NULL;
-		dictionary->colors[i].last = NULL;
 	}
 
 	return EXIT_SUCCESS;

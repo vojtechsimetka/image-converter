@@ -20,12 +20,20 @@
 #include "bmp.h"
 #include "constant.h"
 
+/**
+ * Function read byte from input file
+ *
+ * @param ptr_file Pointer to input file
+ * @param Byte Pointer to byte buffer 
+ * @return status code READ_WRITE_OK on success, READ_WRITE_ERR on failure and END_OF_FILE when EOF is readed
+ */
 u_int8_t readByteFromFile(FILE *ptr_file, u_int8_t *Byte){
 
+	// Read byte from input file
 	if (fread (Byte, sizeof(u_int8_t), 1, ptr_file)) {
 		return READ_WRITE_OK;
 	}
-	else {printf("%s\n", strerror(errno));
+	else {
 		if (ferror(ptr_file))
 			return READ_WRITE_ERR;
 		else
@@ -33,6 +41,12 @@ u_int8_t readByteFromFile(FILE *ptr_file, u_int8_t *Byte){
 	}
 }
 
+/**
+ * Function reverse bits in byte
+ *
+ * @param byte Byte to reverse
+ * @return reversed byte
+ */
 
 u_int8_t reverseByte(u_int8_t byte)
 {
@@ -47,6 +61,12 @@ u_int8_t reverseByte(u_int8_t byte)
     return tmp;
 }
 
+/**
+ * Function reverse bits in double world
+ *
+ * @param dword Souble world to reverse
+ * @return reversed double world
+ */
 u_int32_t reverseDWord(u_int32_t dword)
 {
     int i;
@@ -60,6 +80,15 @@ u_int32_t reverseDWord(u_int32_t dword)
     return tmp;
 }
 
+/**
+ * Function read n (lzw size) bits from input file
+ *
+ * @param gifFile Pointer to input file
+ * @param reader Reader struct
+ * @param readedBits Pointer to readed value buffer
+ * @param u_int8_t Current block status
+ * @return status code EXIT_FAILURE on failure and EXIT_SUCCESS on success
+ */
 u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *readedBits, u_int8_t subBlockState) {
 
 	u_int8_t readRetVal;
@@ -67,10 +96,12 @@ u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *r
 	// Init return value
 	*readedBits = 0;
 
-	// Init reader
+	// Init reader - read bytes to internal buffer
+
 	if (reader->usedBitsFromByte1LastTime == -1) {
 		reader->usedBitsFromByte1LastTime = 0;
 
+		// Byte 1
 		if (reader->BytesToReadInSubBlock != 0) {
 			readRetVal = readByteFromFile(gifFile, &reader->Byte1);
 			reader->BytesToReadInSubBlock--;
@@ -87,6 +118,7 @@ u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *r
 		else
 			reader->Byte1ValidFlag = 0;
 
+		// Byte 2
 		if (reader->BytesToReadInSubBlock != 0) {
 			readRetVal = readByteFromFile(gifFile, &reader->Byte2);
 			reader->BytesToReadInSubBlock--;
@@ -103,6 +135,7 @@ u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *r
 		else
 			reader->Byte2ValidFlag = 0;
 
+		// Byte 3
 		if (reader->BytesToReadInSubBlock != 0) {
 			readRetVal = readByteFromFile(gifFile, &reader->Byte3);
 			reader->BytesToReadInSubBlock--;
@@ -176,10 +209,12 @@ u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *r
 			reader->Byte3ValidFlag = 0;
 	}
 
+	// Create value from bytes
 	(*readedBits) = (((u_int32_t)reverseByte(reader->Byte1)) << (24 + reader->usedBitsFromByte1LastTime));
 	(*readedBits) = (*readedBits) | (((u_int32_t)reverseByte(reader->Byte2)) << (16 + reader->usedBitsFromByte1LastTime));
 	(*readedBits) = (*readedBits) | (((u_int32_t)reverseByte(reader->Byte3)) << (8 + reader->usedBitsFromByte1LastTime));
 
+	// Update used bits from first and second internal buffered bytes and read new values to internal buffer
 
 	int bitsPerBytes2_3 = reader->lzwSize + reader->usedBitsFromByte1LastTime - 8;
 	if (bitsPerBytes2_3 >= 8) {
@@ -220,6 +255,7 @@ u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *r
 		else
 			reader->Byte3ValidFlag = 0;
 	}
+	// Get only one new byte
 	else if(bitsPerBytes2_3 > 0) {
 		reader->usedBitsFromByte1LastTime = bitsPerBytes2_3;
 		reader->Byte1 = reader->Byte2;
@@ -269,6 +305,7 @@ u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *r
 		}
 	}
 
+	// Apply current mask, whitch is set by current lzw size to readed value 
 	switch (reader->lzwSize) {
 		case(2):
 				(*readedBits) = (reverseDWord(*readedBits & _2_BIT_MASK));
@@ -315,16 +352,33 @@ u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *r
 	return EXIT_SUCCESS;
 }
 
+/**
+ * Function save byte to file
+ *
+ * @param ptr_file Pointer to file
+ * @param Byte Pointer to byte buffer 
+ * @return status code READ_WRITE_OK on success and READ_WRITE_ERR on failure
+ */
 u_int8_t writeByteToFile(FILE *ptr_file, u_int8_t *Byte){
 
+	// Write byte
 	if (fwrite (Byte, sizeof(u_int8_t), sizeof(u_int8_t), ptr_file))
 		return READ_WRITE_OK;
 	else
 		return READ_WRITE_ERR;
 }
 
+/**
+ * Function save byte to file on offset address
+ *
+ * @param ptr_file Pointer to file
+ * @param Byte Pointer to byte buffer 
+ * @param offset Offset to file
+ * @return status code READ_WRITE_OK on success and READ_WRITE_ERR on failure
+ */
 u_int8_t writeByteToFileOffset(FILE *ptr_file, u_int8_t *Byte, int offset){
 
+	// Go to position and write byte
 	fseek ( ptr_file , offset , SEEK_SET );
 	if (!writeByteToFile(ptr_file, Byte))
 		return READ_WRITE_OK;
@@ -332,36 +386,12 @@ u_int8_t writeByteToFileOffset(FILE *ptr_file, u_int8_t *Byte, int offset){
 		return READ_WRITE_ERR;
 }
 
-int createLogFile(tGIF2BMP *logStruc, char *logFileName){
-
-	if (logFileName == NULL)
-		return EXIT_SUCCESS;
-
-	FILE *ptr_log_file;
-
-	ptr_log_file = fopen(logFileName, "w+");
-
-	if (!ptr_log_file){
-		fprintf(stderr, "%s", "Can not create output log file.");
-		return M_EXIT_FAILURE;
-	}
-
-	char buffer[100];
-	memset(buffer, 0, sizeof(buffer));
-
-	int cx = snprintf ( buffer, 100, "login = xsirok07\nuncodedSize = %"PRId64"\ncodedSize = %"PRId64"\n", (*logStruc).gifSize, (*logStruc).bmpSize);
-	if (cx < 0){
-		fprintf(stderr, "%s", "Can not write into log file.");
-		return M_EXIT_FAILURE;
-	}
-
-	fwrite (buffer , sizeof(char), strlen(buffer), ptr_log_file);
-
-	fclose(ptr_log_file);
-
-	return EXIT_SUCCESS;
-}
-
+/**
+ * Function return image size in bytes
+ *
+ * @param file Pointer to file
+ * @return Image size in bytes
+ */
 int64_t getFileSize(FILE *file) {
 	fseek(file, 0, SEEK_END);
 	int64_t size = ftell(file);
@@ -369,6 +399,13 @@ int64_t getFileSize(FILE *file) {
 	return size;
 }
 
+/**
+ * Function init structures whitch is used for converion
+ *
+ * @param globalColorTable Global color table
+ * @param localColorTable Local color table
+ * @param reader Pointer to reader struct
+ */
 void initStructures (tRGB globalColorTable [], tRGB localColorTable [], tGIFREADER *reader) {
 
 	// Init color tables
@@ -393,75 +430,49 @@ void initStructures (tRGB globalColorTable [], tRGB localColorTable [], tGIFREAD
 
 }
 
-void dealocateBitMapBuffer (tBGR **bitMap, u_int32_t nrows, u_int32_t ncolumns) {
 
-	for(int i = 0; i < nrows; i++)
-		free(bitMap[i]);
+/**
+ * Function decode GIF89a
+ *
+ * @param inputFile Pointer to input file
+ * @return color matrix of pixels
+ */
 
-	free(bitMap);
-}
-
-
-int gif2bmp(tGIF2BMP *logStruc, FILE *inputFile, FILE *outputFile){
+cv::Mat gif2bmp(FILE *inputFile){
 
 	tPIC_PROPERTY pic;
 	tRGB globalColorTable [256];
 	tRGB localColorTable [256];
-	//tGRAPHIC_CONTROL_EXT graphicControlExt;
 	tIMAGE_DESCRIPTOR imageDescriptor;
 	tGIFREADER reader;
 	u_int8_t readRetVal = 0;
 	u_int8_t Byte = 0;
-	tBGR **bitMap;
-	tBMPWRITER bmpWriter;
-	tRGB backgroundColor = {0, 0, 0};
+    tBITMAPWRITER bitMapWriter;
 
 	// Init used structures
 	initStructures (globalColorTable, localColorTable, &reader);
 
-	// Get gif file size
-	logStruc->gifSize = getFileSize(inputFile);
-
 	// Check gif version
 	if (checkGifVersion(inputFile))
-		return M_EXIT_FAILURE;
+        throw;
 
 	// Parse gif header
 	if (parseGifHeader(inputFile, &pic))
-		return M_EXIT_FAILURE;
+        throw;
 
 	// Get global table
 	if (pic.globalColorTable) {
 		reader.activeColorTableSize = (u_int8_t)pic.colorTableLong;
 		if (getColorTable(inputFile, globalColorTable, pic.colorTableLong))
-			return M_EXIT_FAILURE;
+            throw;
 	}
 
-	// Allocate bmp data buffer
-	u_int32_t nrows = pic.heightInPixHighByte*256 + pic.heightInPixLowByte;
-	u_int32_t ncolumns = pic.widthInPixHighByte*256 + pic.widthInPixLowByte;
+    // Init output matrix
+    Mat bitMap(pic.heightInPixHighByte*256 + pic.heightInPixLowByte, pic.widthInPixHighByte*256 + pic.widthInPixLowByte, CV_32FC1, Scalar(255,255,255));
 
 	// Get background color
 	if (pic.backgroundColor != -1) {
-		backgroundColor = globalColorTable[pic.backgroundColor];
-	}
-
-    bitMap = (tBGR **)malloc(nrows * sizeof(tBGR *));
-	if(bitMap == NULL) {
-		fprintf(stderr, "Allocation error\n");
-		return M_EXIT_FAILURE;
-	}
-	for(int i = 0; i < nrows; i++) {
-        bitMap[i] = (tBGR *)malloc(ncolumns * sizeof(tBGR));
-		if(bitMap[i] == NULL) {
-			fprintf(stderr, "out of memory\n");
-			return M_EXIT_FAILURE;
-		}
-		for (int j = 0; j < ncolumns; j++) {
-			bitMap[i][j].blue = backgroundColor.blue;
-			bitMap[i][j].red = backgroundColor.red;
-			bitMap[i][j].green = backgroundColor.green;
-		}
+        bitMap = Scalar(globalColorTable[pic.backgroundColor].red, globalColorTable[pic.backgroundColor].green, globalColorTable[pic.backgroundColor].blue);
 	}
 
 	// Get gif body
@@ -470,12 +481,10 @@ int gif2bmp(tGIF2BMP *logStruc, FILE *inputFile, FILE *outputFile){
 		// Get block introducer from gif
 		readRetVal = readByteFromFile(inputFile, &Byte);
 		if (readRetVal == READ_WRITE_ERR) {
-			fprintf(stderr, "%s", "Can not read input file.");
-			return M_EXIT_FAILURE;
+            throw "Can not read input file.";
 		}
 		else if (readRetVal == END_OF_FILE) {
-			fprintf(stderr, "%s", "Incorrect gif file.");
-			return M_EXIT_FAILURE;
+            throw "Incorrect gif file.";
 		}
 		else { // End of file
 			if (Byte == GIF_END_OF_FILE) {
@@ -484,40 +493,40 @@ int gif2bmp(tGIF2BMP *logStruc, FILE *inputFile, FILE *outputFile){
 			else if (Byte == EXTENSION_INTRODUCER) { // Get extension label
 				readRetVal = readByteFromFile(inputFile, &Byte);
 				if (readRetVal == READ_WRITE_ERR) {
-					fprintf(stderr, "%s", "Can not read input file.");
-					return M_EXIT_FAILURE;
+                    throw "Can not read input file.";
 				}
 				else if (readRetVal == END_OF_FILE) {
-					fprintf(stderr, "%s", "Incorrect gif file.");
-					return M_EXIT_FAILURE;
+                    throw "Incorrect gif file.";
 				}
 				else {
 					switch (Byte) {
 						case(APPLICATION_EXTENSION_LABEL):	// Application ext.
-								if (getApplicationExt(inputFile))
-									return M_EXIT_FAILURE;
+								if (getApplicationExt(inputFile)) {
+                                    throw;
+								}
 								break;
 						case(COMMENT_EXTENSION_LABEL):		// Comment ext.
-								if (getCommentExt(inputFile))
-									return M_EXIT_FAILURE;
+								if (getCommentExt(inputFile)) {
+                                    throw;
+								}
 								break;
 						case(PLAINTEXT_EXTENSION_LABEL):	// Plain text ext.
-								if (getPlainTextExt(inputFile))
-									return M_EXIT_FAILURE;
+								if (getPlainTextExt(inputFile)) {
+                                    throw;
+								}
 								break;
 						case(GRAPHICS_CONTROL_LABEL):		// Graphic control ext.
-								if (getGraphicControlExt(inputFile))
-									return M_EXIT_FAILURE;
+								if (getGraphicControlExt(inputFile)) {
+                                    throw;
+								}
 
 								// Read next byte
 								readRetVal = readByteFromFile(inputFile, &Byte);
 								if (readRetVal == READ_WRITE_ERR) {
-									fprintf(stderr, "%s", "Can not read input file.");
-									return M_EXIT_FAILURE;
+                                    throw "Can not read input file.";
 								}
 								else if (readRetVal == END_OF_FILE) {
-									fprintf(stderr, "%s", "Incorrect gif file.");
-									return M_EXIT_FAILURE;
+                                    throw "Incorrect gif file.";
 								}
 								else {
 									switch (Byte) {
@@ -525,23 +534,25 @@ int gif2bmp(tGIF2BMP *logStruc, FILE *inputFile, FILE *outputFile){
 										case(IMAGE_DESCRIPTOR_INTRODUCER):
 
 												// Read image descriptor
-												if (getImageDescriptor(inputFile, &imageDescriptor))
-													return M_EXIT_FAILURE;
+												if (getImageDescriptor(inputFile, &imageDescriptor)) {
+                                                    throw;
+												}
 
 												// Init bmpWritter
-												bmpWriter.actualColumn = imageDescriptor.leftPosHighByte*256 + imageDescriptor.leftPosLowByte;
-												bmpWriter.actualRow = imageDescriptor.topPosHighByte*256 + imageDescriptor.topPosLowByte;
-												bmpWriter.actualWidth = imageDescriptor.widthHighByte*256 + imageDescriptor.widthLowByte;
-												bmpWriter.actualHeight = imageDescriptor.heightHighByte*256 + imageDescriptor.heightLowByte;
-												bmpWriter.actualX = bmpWriter.actualColumn;
-												bmpWriter.actualY = bmpWriter.actualRow;
+                                                bitMapWriter.actualColumn = imageDescriptor.leftPosHighByte*256 + imageDescriptor.leftPosLowByte;
+                                                bitMapWriter.actualRow = imageDescriptor.topPosHighByte*256 + imageDescriptor.topPosLowByte;
+                                                bitMapWriter.actualWidth = imageDescriptor.widthHighByte*256 + imageDescriptor.widthLowByte;
+                                                bitMapWriter.actualHeight = imageDescriptor.heightHighByte*256 + imageDescriptor.heightLowByte;
+                                                bitMapWriter.actualX = bitMapWriter.actualColumn;
+                                                bitMapWriter.actualY = bitMapWriter.actualRow;
 
 												// Set and read color table
 												if (imageDescriptor.localColorTableFlag) {
 													reader.activeColorTable = localColorTable;
 													reader.activeColorTableSize = imageDescriptor.localColorTableSize;
-													if (getColorTable(inputFile, localColorTable, imageDescriptor.localColorTableSize))
-														return M_EXIT_FAILURE;
+													if (getColorTable(inputFile, localColorTable, imageDescriptor.localColorTableSize)) {
+                                                        throw;
+													}
 												}
 												else {
 													reader.activeColorTable = globalColorTable;
@@ -550,8 +561,9 @@ int gif2bmp(tGIF2BMP *logStruc, FILE *inputFile, FILE *outputFile){
 
 												// Get image data
 												reader.dataBlockSize = imageDescriptor.sizeInPixels;
-												if (getImageData(inputFile, outputFile, &reader, bitMap, &bmpWriter))
-													return M_EXIT_FAILURE;
+                                                if (getImageData(inputFile, &reader, bitMap, &bitMapWriter)) {
+                                                    throw;
+												}
 
 												break;
 
@@ -559,41 +571,42 @@ int gif2bmp(tGIF2BMP *logStruc, FILE *inputFile, FILE *outputFile){
 										case(PLAINTEXT_EXTENSION_LABEL):
 
 												// Get plain text extension
-												if (getPlainTextExt(inputFile))
-													return M_EXIT_FAILURE;
+												if (getPlainTextExt(inputFile)) {
+                                                    throw;
+												}
 												break;
 										default:
-											fprintf(stderr, "%s", "Incorrect gif file.");
-											return M_EXIT_FAILURE;
+                                            throw "Incorrect gif file.";
 									}
 								}
 
 								break;
 						default:
-							fprintf(stderr, "%s", "Incorrect gif file.");
-							return M_EXIT_FAILURE;
+                            throw "Incorrect gif file.";
 					}
 
 				}
 			}
 			else if (Byte == IMAGE_DESCRIPTOR_INTRODUCER) {
-				if (getImageDescriptor(inputFile, &imageDescriptor))
-					return M_EXIT_FAILURE;
+				if (getImageDescriptor(inputFile, &imageDescriptor)) {
+                    throw;
+				}
 
 				// Init bmpWritter
-				bmpWriter.actualColumn = imageDescriptor.leftPosHighByte*256 + imageDescriptor.leftPosLowByte;
-				bmpWriter.actualRow = imageDescriptor.topPosHighByte*256 + imageDescriptor.topPosLowByte;
-				bmpWriter.actualWidth = imageDescriptor.widthHighByte*256 + imageDescriptor.widthLowByte;
-				bmpWriter.actualHeight = imageDescriptor.heightHighByte*256 + imageDescriptor.heightLowByte;
-				bmpWriter.actualX = bmpWriter.actualColumn;
-				bmpWriter.actualY = bmpWriter.actualRow;
+                bitMapWriter.actualColumn = imageDescriptor.leftPosHighByte*256 + imageDescriptor.leftPosLowByte;
+                bitMapWriter.actualRow = imageDescriptor.topPosHighByte*256 + imageDescriptor.topPosLowByte;
+                bitMapWriter.actualWidth = imageDescriptor.widthHighByte*256 + imageDescriptor.widthLowByte;
+                bitMapWriter.actualHeight = imageDescriptor.heightHighByte*256 + imageDescriptor.heightLowByte;
+                bitMapWriter.actualX = bitMapWriter.actualColumn;
+                bitMapWriter.actualY = bitMapWriter.actualRow;
 
 				// Set and read color table
 				if (imageDescriptor.localColorTableFlag) {
 					reader.activeColorTable = localColorTable;
 					reader.activeColorTableSize = imageDescriptor.localColorTableSize;
-					if (getColorTable(inputFile, localColorTable, imageDescriptor.localColorTableSize))
-						return M_EXIT_FAILURE;
+					if (getColorTable(inputFile, localColorTable, imageDescriptor.localColorTableSize)) {
+                        throw;
+					}
 				}
 				else {
 					reader.activeColorTable = globalColorTable;
@@ -601,60 +614,30 @@ int gif2bmp(tGIF2BMP *logStruc, FILE *inputFile, FILE *outputFile){
 				}
 
 				reader.dataBlockSize = imageDescriptor.sizeInPixels;
-				if (getImageData(inputFile, outputFile, &reader, bitMap, &bmpWriter))
-					return M_EXIT_FAILURE;
+                if (getImageData(inputFile, &reader, bitMap, &bitMapWriter)) {
+                    throw;
+				}
+
 			}
 			else {
-				fprintf(stderr, "%s", "Incorrect gif file.");
-				return M_EXIT_FAILURE;
+                throw "Incorrect gif file.";
 			}
 		}
 	}
 
-	// Write BMP header into file
-	if (writeBmpHeaders(outputFile, &pic)) {
-		dealocateBitMapBuffer (bitMap, nrows, ncolumns);
-		return M_EXIT_FAILURE;
-	}
-
-	// Write BMP data stream into file
-	if (writeBmpData(outputFile, bitMap, &pic)) {
-		dealocateBitMapBuffer (bitMap, nrows, ncolumns);
-		return M_EXIT_FAILURE;
-	}
-
-	// Set BMP header file size
-	if (setBMPFileSize(outputFile, logStruc)) {
-		dealocateBitMapBuffer (bitMap, nrows, ncolumns);
-		return M_EXIT_FAILURE;
-	}
-
-	// Free BMP buffer
-	dealocateBitMapBuffer (bitMap, nrows, ncolumns);
-
-	return EXIT_SUCCESS;
+    return bitMap;
 }
 
 cv::Mat loadGif(const string &filename)
 {
-    FILE *f = fopen(filename.c_str(), "rb");
-    FILE *fout = fopen("test.bmp", "wb+");
-    Mat m = cv::Mat::zeros(100, 100, CV_32FC1);
+    FILE *fgif = fopen(filename.c_str(), "rb");
 
-    if (f == NULL)
+    if (fgif == NULL)
         throw "Unable to open input file";
 
-    if (fout == NULL)
-        throw "Unable to open output file";
+    Mat m = gif2bmp(fgif);
 
-    // TODO: Predelat aby brala jako vstup cv::Mat a do te ulozit vysledek misto BMP
-    // TODO: Misto return throw vyjimka tak jak je tomu o par radku vys
-    tGIF2BMP log_struc;
-    if (gif2bmp(&log_struc, f, fout) != EXIT_SUCCESS);
-        throw "gif2bmp exited incorrectly";
-
-    fclose(f);
-    fclose(fout);
+    fclose(fgif);
 
     return m;
 }

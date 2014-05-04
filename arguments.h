@@ -11,6 +11,8 @@
 #define ARGUMENTS_H
 #include <iostream>
 #include <set>
+#include <stdlib.h>
+#include <string.h>
 
 using namespace std;
 

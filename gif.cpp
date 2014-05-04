@@ -20,19 +20,19 @@
 #include "constant.h"
 
 /**
- * Function increment bmp output buffer pointer
+ * Function increment output buffer pointer
  *
- * @param bmpWriter BMP writer structure - include logical screen size, position and offset
+ * @param bitMapWriter bit map writer structure - include logical screen size, position and offset
  */
-void incBMPBufferPointer(tBMPWRITER *bmpWriter) {
+void incBitMapBufferPointer(tBITMAPWRITER *bitMapWriter) {
 
-	bmpWriter->actualColumn++;
-	if (bmpWriter->actualColumn == (bmpWriter->actualX + bmpWriter->actualWidth)) {
+	bitMapWriter->actualColumn++;
+	if (bitMapWriter->actualColumn == (bitMapWriter->actualX + bitMapWriter->actualWidth)) {
 
-		bmpWriter->actualColumn = bmpWriter->actualX;
-		bmpWriter->actualRow++;
-		if (bmpWriter->actualRow == (bmpWriter->actualY + bmpWriter->actualHeight)) {
-			bmpWriter->actualRow = bmpWriter->actualY;
+		bitMapWriter->actualColumn = bitMapWriter->actualX;
+		bitMapWriter->actualRow++;
+		if (bitMapWriter->actualRow == (bitMapWriter->actualY + bitMapWriter->actualHeight)) {
+			bitMapWriter->actualRow = bitMapWriter->actualY;
 		}
 	}
 }
@@ -41,19 +41,35 @@ void incBMPBufferPointer(tBMPWRITER *bmpWriter) {
  * Function save color structure to BMP output buffer on writer position
  *
  * @param color Index of color to color table
- * @param bmpOutputBuffer Pointer to bmp output buffer
+ * @param bitMap Bit map matrix
  * @param colorTable Pointer to color table
- * @param bmpWriter	Pointer to BMP writer structure - include logical screen size, position and offset
+ * @param bitMapWriter Pointer to bit map writer structure - include logical screen size, position and offset
  */
-void processColor(int color, tBGR **bmpOutputBuffer, tRGB *colorTable, tBMPWRITER *bmpWriter) {
+void processColor(int color, Mat &bitMap, tRGB *colorTable, tBITMAPWRITER *bitMapWriter) {
+
+    // Tohle je OK
+cout<<"["<<color<<"]"<<" r    "<<colorTable[color].red<<" g    "<<colorTable[color].green<<" b    "<<colorTable[color].blue<<" r    "<<bitMapWriter->actualRow<<" c    "<<bitMapWriter->actualColumn<<endl;
+;
+
+    // Tady se to posere
+    //bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[0] = colorTable[color].blue;
+    //bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[1] = colorTable[color].green;
+    //bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[2] = colorTable[color].red;
+
+    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[0] = 255;
+    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[1] = 0;
+    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[2] = 0;
 
 	// Save color to BMP output buffer
-	bmpOutputBuffer[bmpWriter->actualRow][bmpWriter->actualColumn].blue = colorTable[color].blue;
-	bmpOutputBuffer[bmpWriter->actualRow][bmpWriter->actualColumn].red = colorTable[color].red;
-	bmpOutputBuffer[bmpWriter->actualRow][bmpWriter->actualColumn].green = colorTable[color].green;
+    //bmpOutputBuffer[bitMapWriter->actualRow][bitMapWriter->actualColumn].blue = colorTable[color].blue;
+    //bmpOutputBuffer[bitMapWriter->actualRow][bitMapWriter->actualColumn].red = colorTable[color].red;
+    //bmpOutputBuffer[bitMapWriter->actualRow][bitMapWriter->actualColumn].green = colorTable[color].green;
+
 
 	// Increment BMP output buffer pointer
-	incBMPBufferPointer(bmpWriter);
+	incBitMapBufferPointer(bitMapWriter);
+
+
 }
 
 /**
@@ -64,7 +80,7 @@ void processColor(int color, tBGR **bmpOutputBuffer, tRGB *colorTable, tBMPWRITE
  * @param colorTable Pointer to color table
  * @param bmpWriter Pointer to BMP writer structure - include logical screen size, position and offset
  */
-void processColorList(tDIC_ITEM *list, tBGR **bmpOutputBuffer, tRGB *colorTable, tBMPWRITER *bmpWriter) {
+void processColorList(tDIC_ITEM *list, Mat &bitMap, tRGB *colorTable, tBITMAPWRITER *bitMapWriter) {
 
 	// Get first color of the list
 	tLIST_ITEM *item = list->first;
@@ -73,7 +89,7 @@ void processColorList(tDIC_ITEM *list, tBGR **bmpOutputBuffer, tRGB *colorTable,
 	while (item != NULL) {
 
 		// Process item color
-		processColor(item->colorTableIndex, bmpOutputBuffer, colorTable, bmpWriter);
+        processColor(item->colorTableIndex, bitMap, colorTable, bitMapWriter);
 
 		// Get next color
 		item = item->nextColor;
@@ -87,10 +103,10 @@ void processColorList(tDIC_ITEM *list, tBGR **bmpOutputBuffer, tRGB *colorTable,
  * @param outputFile Pointer to output BMP file
  * @param reader Pointer to GIF reader structure
  * @param bmpOutputBuffer Pointer to BMP output buffer
- * @param bmpWriter Pointer to BMP writer structure - include logical screen size, position and offset
+ * @param bitMapWriter Pointer to bit map writer structure - include logical screen size, position and offset
  * @return 0 on success, 1 on failure
  */
-int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **bmpOutputBuffer, tBMPWRITER *bmpWriter) {
+int getImageData(FILE *inputFile, tGIFREADER *reader, Mat &bitMap, tBITMAPWRITER *bitMapWriter) {
 
 	u_int8_t Byte = 0;
 	int readRetVal = 0;
@@ -130,34 +146,42 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 		reader->BytesToReadInSubBlock = Byte;
 
 	// Init dictionary
-	if(initDictionary (&dictionary, reader))
+	if(initDictionary (&dictionary, reader)) {
+		freeDictionary(&dictionary);
 		return EXIT_FAILURE;
+	}
 
 	// Read first code - should be CC
-	if (readBitsStreamFromFile (inputFile, reader, &readedBits, subBlockStatus))
+	if (readBitsStreamFromFile (inputFile, reader, &readedBits, subBlockStatus)) {
+		freeDictionary(&dictionary);
 		return EXIT_FAILURE;
+	}
 
 	// CC code
-	if (readedBits == dictionary.clearCode) {}
+	if (readedBits == (u_int32_t)dictionary.clearCode) {}
 	// Wrong code
 	else {
 		fprintf(stderr, "%s", "Incorrect gif file.");
+		freeDictionary(&dictionary);
 		return EXIT_FAILURE;
 	}
 
 	// Read first data code
-	if (readBitsStreamFromFile (inputFile, reader, &readedBits, subBlockStatus))
+	if (readBitsStreamFromFile (inputFile, reader, &readedBits, subBlockStatus)) {
+		freeDictionary(&dictionary);
 		return EXIT_FAILURE;
+	}
 
 	// Check the existence of the code in the dictionary
 	if (codeInDictionary(&dictionary, &readedBits)) {
 		fprintf(stderr, "%s", "Incorrect gif file.");
+		freeDictionary(&dictionary);
 		return EXIT_FAILURE;
 	}
 	else {
 
 		// Process pixel
-		processColor(readedBits, bmpOutputBuffer, reader->activeColorTable, bmpWriter);
+        processColor(readedBits, bitMap, reader->activeColorTable, bitMapWriter);
 
 		// Pixel processed
 		processedPixels++;
@@ -206,7 +230,7 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 
 				// Last code must be end of information
 				if (processedPixels == reader->dataBlockSize) {
-					if (readedBits == dictionary.endOfInformationCode) {
+					if (readedBits == (u_int32_t)dictionary.endOfInformationCode) {
 						freeDictionary(&dictionary);
 						return EXIT_SUCCESS;
 					}
@@ -219,14 +243,14 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 
 
 				// Clear code
-				if (readedBits == dictionary.clearCode) {
+				if (readedBits == (u_int32_t)dictionary.clearCode) {
 					// Init dictionary
 					if(reInitDictionary (&dictionary, reader)) {
 						freeDictionary(&dictionary);
 						return EXIT_FAILURE;
 					}
 				}
-				else if (readedBits == dictionary.endOfInformationCode) {
+				else if (readedBits == (u_int32_t)dictionary.endOfInformationCode) {
 					fprintf(stderr, "%s", "Incorrect gif file.");
 					freeDictionary(&dictionary);
 					return EXIT_FAILURE;
@@ -240,13 +264,13 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 						K = dictionary.colors[dictionary.previousCode].first->colorTableIndex;
 
 						// Process CODE-1 record
-						processColorList(&(dictionary.colors[dictionary.previousCode]), bmpOutputBuffer, reader->activeColorTable, bmpWriter);
+                        processColorList(&(dictionary.colors[dictionary.previousCode]), bitMap, reader->activeColorTable, bitMapWriter);
 
 						// List length pixels processed
 						processedPixels += listLength(&(dictionary.colors[dictionary.previousCode]));
 
 						// Process K
-						processColor(K, bmpOutputBuffer, reader->activeColorTable, bmpWriter);
+                        processColor(K, bitMap, reader->activeColorTable, bitMapWriter);
 
 						// Pixel processed
 						processedPixels++;
@@ -255,7 +279,7 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 					else {// Code is already in dictionary
 
 						// Process CODE record
-						processColorList(&(dictionary.colors[readedBits]), bmpOutputBuffer, reader->activeColorTable, bmpWriter);
+                        processColorList(&(dictionary.colors[readedBits]), bitMap, reader->activeColorTable, bitMapWriter);
 
 						// List length pixels processed
 						processedPixels += listLength(&(dictionary.colors[readedBits]));
@@ -357,14 +381,11 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 				// Change block status
 				subBlockStatus = UNFINISHED_SUBBLOCK;
 
-				//printf("code: %d, prev code: %d, lzw size %d, dic max: %d, processedPixels: %d\n", readedBits, dictionary.previousCode, reader->lzwSize, dictionary.curMaxCode, processedPixels);
-				//fflush(stdout);
-
 				// Full dictionary?
 				if (dictionary.firstEmptyCode == DICTIONARY_FULL) {
 
 					// Expecting clean code
-					if (readedBits == dictionary.clearCode) {
+					if (readedBits == (u_int32_t)dictionary.clearCode) {
 
 						// Restart process
 						reader->lzwSize = reader->initLzwSize;
@@ -386,13 +407,13 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 				}
 
 				// Last code in data sub block
-				if (readedBits == dictionary.endOfInformationCode) {
+				if (readedBits == (u_int32_t)dictionary.endOfInformationCode) {
 					freeDictionary(&dictionary);
 					return EXIT_SUCCESS;
 				}
 
 				// Clear code
-				else if (readedBits == dictionary.clearCode) {
+				else if (readedBits == (u_int32_t)dictionary.clearCode) {
 					// Init dictionary
 					if(reInitDictionary (&dictionary, reader)) {
 						freeDictionary(&dictionary);
@@ -409,13 +430,13 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 						K = dictionary.colors[dictionary.previousCode].first->colorTableIndex;
 
 						// Process CODE-1 record
-						processColorList(&(dictionary.colors[dictionary.previousCode]), bmpOutputBuffer, reader->activeColorTable, bmpWriter);
+                        processColorList(&(dictionary.colors[dictionary.previousCode]), bitMap, reader->activeColorTable, bitMapWriter);
 
 						// List length pixels processed
 						processedPixels += listLength(&(dictionary.colors[dictionary.previousCode]));
 
 						// Process K
-						processColor(K, bmpOutputBuffer, reader->activeColorTable, bmpWriter);
+                        processColor(K, bitMap, reader->activeColorTable, bitMapWriter);
 
 						// Pixel processed
 						processedPixels++;
@@ -424,7 +445,7 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 					else {// Code is already in dictionary
 
 						// Process CODE record
-						processColorList(&(dictionary.colors[readedBits]), bmpOutputBuffer, reader->activeColorTable, bmpWriter);
+                        processColorList(&(dictionary.colors[readedBits]), bitMap, reader->activeColorTable, bitMapWriter);
 
 						// List length pixels processed
 						processedPixels += listLength(&(dictionary.colors[readedBits]));
@@ -519,17 +540,14 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 					return EXIT_FAILURE;
 				}
 
-				//printf("code: %d, prev code: %d, lzw size %d, dic max: %d, processedPixels: %d\n", readedBits, dictionary.previousCode, reader->lzwSize, dictionary.curMaxCode, processedPixels);
-				//fflush(stdout);
-
 				// Last code in data sub block
-				if (readedBits == dictionary.endOfInformationCode) {
+				if (readedBits == (u_int32_t)dictionary.endOfInformationCode) {
 					freeDictionary(&dictionary);
 					return EXIT_SUCCESS;
 				}
 
 				// Clear code
-				else if (readedBits == dictionary.clearCode) {
+				else if (readedBits == (u_int32_t)dictionary.clearCode) {
 					// Init dictionary
 					if(reInitDictionary (&dictionary, reader)) {
 						freeDictionary(&dictionary);
@@ -545,7 +563,7 @@ int getImageData(FILE *inputFile, FILE *outputFile, tGIFREADER *reader, tBGR **b
 						return EXIT_FAILURE;
 					}
 					else {
-						processColor(readedBits, bmpOutputBuffer, reader->activeColorTable, bmpWriter);
+                        processColor(readedBits, bitMap, reader->activeColorTable, bitMapWriter);
 
 						// Pixel processed
 						processedPixels++;
@@ -733,8 +751,9 @@ int getCommentExt(FILE *inputFile) {
  * @return 0 on success, 1 on failure
  */
 int getPlainTextExt(FILE *inputFile) {
-	// TO DO
-	return EXIT_SUCCESS;
+
+	fprintf(stderr, "%s", "Plain text extension is not supported.");
+	return EXIT_FAILURE;
 }
 
 /**
@@ -828,7 +847,7 @@ int getImageDescriptor(FILE *gifFile, tIMAGE_DESCRIPTOR *imageDescriptor) {
 						imageDescriptor->topPosLowByte = Byte;
 						break;
 				case (3):
-						imageDescriptor->topPosHighByte = Byte;
+                        imageDescriptor->topPosHighByte = Byte;
 						break;
 				case (4):
 						imageDescriptor->widthLowByte = Byte;

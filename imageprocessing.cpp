@@ -56,11 +56,11 @@ bool ImageProcessing::isGif(const string &filename)
 ImageProcessing::ImageProcessing(const string filename)
 {
     // TODO: Call GIF load function
-    if (this->isGif(filename))
+    //if (this->isGif(filename))
         this->image = loadGif(filename);
 
-    else
-        this->image = imread(filename);
+    //else
+      //  this->image = imread(filename);
 
     // Failed to load data
     if (this->image.total() == 0)

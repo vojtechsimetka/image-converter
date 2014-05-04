@@ -1,9 +1,12 @@
 /*
- * gif2bmp.h
- *
+ *  File name: gif2bmp.h
  *  Created on: 15. 3. 2014
- *      Author: Adam
+ *  Author: Adam Siroky
+ *  Login: xsirok07
+ *  Type: Header file
+ *  Description: Include functions definitions to convert gif 2 bmp
  */
+
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -25,9 +28,7 @@ u_int8_t writeByteToFileOffset(FILE *ptr_file, u_int8_t *Byte, int offset);
 u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *readedBits, u_int8_t subBlockState);
 u_int8_t reverseByte(u_int8_t byte);
 int64_t getFileSize(FILE *file);
-int gif2bmp(tGIF2BMP *gif2bmp, FILE *inputFile, FILE *outputFile);
-int createLogFile(tGIF2BMP *gif2bmp, char *logFileName);
-void dealocateBitMapBuffer (tBGR **bitMap, u_int32_t nrows, u_int32_t ncolumns);
+cv::Mat gif2bmp(FILE *inputFile);
 u_int8_t readStdInIntoBuffer(u_int8_t *buffer);
 cv::Mat loadGif(const string &filename);
 
