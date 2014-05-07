@@ -58,9 +58,9 @@ public:
 
     inline unsigned int recordLength()
     {
-        unsigned int i = 1;
+        unsigned int i = 0;
         unsigned int out = 2;
-        for (; out <= this->size(); i++)
+        for (; out < this->size(); i++)
             out *=2;
 
         return i;
@@ -80,7 +80,7 @@ public:
     {
         unsigned int i = 0;
         unsigned int out = 2;
-        for (; out <= this->palette.size(); i++)
+        for (; out < this->palette.size(); i++)
             out *=2;
 
         return i;

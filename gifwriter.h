@@ -8,11 +8,11 @@ using namespace std;
 class GIFwriter
 {
 private:
-    unsigned int overflow;
-    unsigned long long data;
     ofstream file;
 
 public:
+    unsigned int overflow;
+    unsigned long long data;
     GIFwriter(const string & filename);
     ~GIFwriter();
     void write(const int &data, unsigned int length);

@@ -303,6 +303,8 @@ u_int8_t readBitsStreamFromFile (FILE *gifFile, tGIFREADER *reader, u_int32_t *r
 			else
 				reader->Byte3ValidFlag = 0;
 		}
+        else
+            reader->usedBitsFromByte1LastTime = 8 + bitsPerBytes2_3;
 	}
 
 	// Apply current mask, whitch is set by current lzw size to readed value 

@@ -18,7 +18,7 @@ GIFwriter::~GIFwriter()
 
 void GIFwriter::write(const int &data, unsigned int length)
 {
-    this->data += data << this->overflow;
+    this->data |= data << this->overflow;
     this->overflow += length;
     while (this->overflow >= 8)
     {
@@ -36,5 +36,6 @@ void GIFwriter::write(const char * data, unsigned int length)
 
 void GIFwriter::finish()
 {
-    this->write(0, 8 - this->overflow);
+    if (this->overflow != 0)
+        this->write(0, 8 - this->overflow);
 }

@@ -47,6 +47,8 @@ void incBitMapBufferPointer(tBITMAPWRITER *bitMapWriter) {
  */
 void processColor(int color, Mat &bitMap, tRGB *colorTable, tBITMAPWRITER *bitMapWriter) {
 
+    printf("	process color[RGB]: [%d, %d, %d]\n", colorTable[color].red, colorTable[color].green, colorTable[color].blue);
+
     // Tady se to posere
     bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn).val[0] = colorTable[color].blue;
     bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn).val[1] = colorTable[color].green;
@@ -145,7 +147,8 @@ int getImageData(FILE *inputFile, tGIFREADER *reader, Mat &bitMap, tBITMAPWRITER
 	if (readedBits == (u_int32_t)dictionary.clearCode) {}
 	// Wrong code
 	else {
-		fprintf(stderr, "%s", "Incorrect gif file.");
+        cout << readedBits << " " << dictionary.clearCode << endl;
+        fprintf(stderr, "%s", "Incorrect gif file.");
 		freeDictionary(&dictionary);
 		return EXIT_FAILURE;
 	}
@@ -576,6 +579,7 @@ int getImageData(FILE *inputFile, tGIFREADER *reader, Mat &bitMap, tBITMAPWRITER
  */
 int getColorTable(FILE *gifFile, tRGB colorTable [], int colorTableSize) {
 
+cout<<endl<<"Reading color table:"<<endl;
 	u_int8_t Byte = 0;
 	int readRetVal = 0;
 
@@ -587,7 +591,7 @@ int getColorTable(FILE *gifFile, tRGB colorTable [], int colorTableSize) {
 				return EXIT_FAILURE;
 			}
 			else if (readRetVal == END_OF_FILE) {
-				fprintf(stderr, "%s", "Incorrect gif file.");
+                fprintf(stderr, "%s", "Incorrect gif file.");
 				return EXIT_FAILURE;
 			}
 			// Save colors
@@ -599,7 +603,10 @@ int getColorTable(FILE *gifFile, tRGB colorTable [], int colorTableSize) {
 				else
 					colorTable[i].blue = Byte;
 			}
+
+		
 		}
+printf("	id[RGB]: %d  [%d, %d, %d]\n", i, colorTable[i].red, colorTable[i].green, colorTable[i].blue);
 	}
 	return EXIT_SUCCESS;
 }
@@ -611,6 +618,8 @@ int getColorTable(FILE *gifFile, tRGB colorTable [], int colorTableSize) {
  * @return 0 on success, 1 on failure
  */
 int getApplicationExt(FILE *inputFile) {
+
+	cout<<endl<<"Application extension: skipped"<<endl;
 
 	u_int8_t Byte = 0;
 	int readRetVal;
@@ -686,6 +695,8 @@ int getApplicationExt(FILE *inputFile) {
  */
 int getCommentExt(FILE *inputFile) {
 
+cout<<endl<<"Comment extension: skipped"<<endl;
+
 	u_int8_t Byte = 0;
 	int readRetVal;
 
@@ -736,6 +747,8 @@ int getCommentExt(FILE *inputFile) {
  */
 int getPlainTextExt(FILE *inputFile) {
 
+cout<<endl<<"Plain text extension: skipped"<<endl;
+
 	fprintf(stderr, "%s", "Plain text extension is not supported.");
 	return EXIT_FAILURE;
 }
@@ -747,6 +760,8 @@ int getPlainTextExt(FILE *inputFile) {
  * @return 0 on success, 1 on failure
  */
 int getGraphicControlExt(FILE *inputFile) {
+
+cout<<endl<<"Graphic control extension: skipped"<<endl;
 
 	u_int8_t Byte = 0;
 	int readRetVal;
@@ -807,6 +822,8 @@ int getImageDescriptor(FILE *gifFile, tIMAGE_DESCRIPTOR *imageDescriptor) {
 	int readRetVal;
 	int tmp = 0;
 
+	cout<<endl<<"Image descriptor:"<<endl;
+
 	// Get image descriptor block
 	for (int i = 0; i < IMAGE_DESCRIPTOR_SIZE - 1; i++) {
 		readRetVal = readByteFromFile(gifFile, &Byte);
@@ -831,7 +848,7 @@ int getImageDescriptor(FILE *gifFile, tIMAGE_DESCRIPTOR *imageDescriptor) {
 						imageDescriptor->topPosLowByte = Byte;
 						break;
 				case (3):
-                        imageDescriptor->topPosHighByte = Byte;
+                        			imageDescriptor->topPosHighByte = Byte;
 						break;
 				case (4):
 						imageDescriptor->widthLowByte = Byte;
@@ -861,6 +878,16 @@ int getImageDescriptor(FILE *gifFile, tIMAGE_DESCRIPTOR *imageDescriptor) {
 	// get data block size in pixels
 	imageDescriptor->sizeInPixels = (imageDescriptor->widthHighByte*256 + imageDescriptor->widthLowByte) * (imageDescriptor->heightHighByte*256 + imageDescriptor->heightLowByte);
 
+cout<<"	Left position: 		 "<<(imageDescriptor->leftPosHighByte*255 + imageDescriptor->leftPosLowByte)<<endl;
+cout<<"	Top position:  		 "<<(imageDescriptor->topPosHighByte*255 + imageDescriptor->topPosLowByte)<<endl;
+cout<<"	Width:         		 "<<(imageDescriptor->widthHighByte*255 + imageDescriptor->widthLowByte)<<endl;
+cout<<"	Height:        		 "<<(imageDescriptor->heightHighByte*255 + imageDescriptor->heightLowByte)<<endl;
+if (imageDescriptor->localColorTableFlag)
+	cout<<"	Local color table:       yes"<<endl;
+else
+	cout<<"	Local color table:       no"<<endl;
+cout<<"	Local color size :       "<<(imageDescriptor->localColorTableSize)<<endl;
+cout<<"	Block size in pix :      "<<(imageDescriptor->sizeInPixels)<<endl<<endl;
 	return EXIT_SUCCESS;
 }
 
@@ -871,7 +898,7 @@ int getImageDescriptor(FILE *gifFile, tIMAGE_DESCRIPTOR *imageDescriptor) {
  * @return 0 on success (supported GIF version), 1 on failure
  */
 int checkGifVersion(FILE *gifFile) {
-
+cout<<endl<<"Gif version: ";
 	u_int8_t Byte = 0;
 	int readRetVal;
 
@@ -926,7 +953,7 @@ int checkGifVersion(FILE *gifFile) {
 			}
 		}
 	}
-
+cout<<"GIF89a"<<endl;
 	return EXIT_SUCCESS;
 }
 
@@ -938,7 +965,7 @@ int checkGifVersion(FILE *gifFile) {
  * @return 0 on success (supported GIF version), 1 on failure
  */
 int parseGifHeader(FILE *gifFile, tPIC_PROPERTY *pic) {
-
+cout<<endl<<"GIF header: "<<endl;
 	u_int8_t Byte = 0;
 	int readRetVal;
 	int tmp = 0;
@@ -989,6 +1016,17 @@ int parseGifHeader(FILE *gifFile, tPIC_PROPERTY *pic) {
 			}
 		}
 	}
+
+
+cout<<"	Width:         		 "<<(pic->widthInPixHighByte*255 + pic->widthInPixLowByte)<<endl;
+cout<<"	Height:        		 "<<(pic->heightInPixHighByte*255 + pic->heightInPixLowByte)<<endl;
+cout<<"	Bits per color channel:	 8"<<endl;
+if (pic->globalColorTable)
+	cout<<"	Global color table:      yes"<<endl;
+else
+	cout<<"	Global color table:      no"<<endl;
+cout<<"	Global color size :      "<<pic->colorTableLong<<endl;
+
 	return EXIT_SUCCESS;
 }
 

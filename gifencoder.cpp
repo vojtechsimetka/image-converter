@@ -44,18 +44,18 @@ GIFencoder::GIFencoder(const string &filename, const Mat &image)
 void GIFencoder::writeHeader(const Mat &image)
 {
     // Writes header block
-    this->writer.write("GIF89a", 64);
+    this->writer.write("GIF89a", 48);
 
     // Image width
-    this->writer.write(image.cols >> 8, 8);
     this->writer.write(image.cols, 8);
+    this->writer.write(image.cols >> 8, 8);
 
     // Image height
-    this->writer.write(image.rows >> 8, 8);
     this->writer.write(image.rows, 8);
+    this->writer.write(image.rows >> 8, 8);
 
     // Flags
-    this->writer.write(0, 8);
+    this->writer.write(0x77, 8);
 
     // Background color index
     this->writer.write(0, 8);
@@ -98,9 +98,9 @@ void GIFencoder::writeSubBlock(const SubBlock &block)
     {
         for (unsigned int x = 0; x < block.getData().cols; x++)
         {
-            unsigned int current_color = block.getData().at<Vec3b>(y, x).val[2] << 16 |
+            unsigned int current_color = block.getData().at<Vec3b>(y, x).val[0] << 16 |
                                          block.getData().at<Vec3b>(y, x).val[1] << 8 |
-                                         block.getData().at<Vec3b>(y, x).val[0];
+                                         block.getData().at<Vec3b>(y, x).val[2];
 
             int index = (dictionary.isInPalette(current_color));
 
@@ -138,6 +138,13 @@ void GIFencoder::writeSubBlock(const SubBlock &block)
             unsigned int tmp = loaded_pixels.back();
             loaded_pixels.clear();
             loaded_pixels.push_back(tmp);
+
+            index = (dictionary.isInPalette(tmp));
+
+            if (index == -1)
+                index = dictionary.addColor(tmp);
+
+            last_loaded_color = index;
         }
     }
 
@@ -145,26 +152,23 @@ void GIFencoder::writeSubBlock(const SubBlock &block)
         output.push_back(output_struct(PALETTE, last_loaded_color));
 
     else if (!loaded_pixels.empty())
-    {
         output.push_back(output_struct(DICTIONARY, last_dict_record));
-        output.push_back(output_struct(PALETTE, last_loaded_color));
-    }
 
     // Image Descriptor
     // Image separator
     this->writer.write(0x2C, 8);
     // Image left
-    this->writer.write(block.offset_x >> 8, 8);
     this->writer.write(block.offset_x, 8);
+    this->writer.write(block.offset_x >> 8, 8);
     // Image right
-    this->writer.write(block.offset_y >> 8, 8);
     this->writer.write(block.offset_y, 8);
+    this->writer.write(block.offset_y >> 8, 8);
     // Image width
-    this->writer.write(block.width >> 8, 8);
     this->writer.write(block.width, 8);
+    this->writer.write(block.width >> 8, 8);
     // Image height
-    this->writer.write(block.height >> 8, 8);
     this->writer.write(block.height, 8);
+    this->writer.write(block.height >> 8, 8);
     // Packed field
     this->writer.write(128 | dictionary.getPaletteSize(), 8);
 
@@ -176,7 +180,7 @@ void GIFencoder::writeSubBlock(const SubBlock &block)
     for (int i = pow(2, dictionary.getPaletteSize()+1) - dictionary.getPalette().size(); i > 0 ; i--)
         this->writer.write(0, 24);
 
-//    cout << dictionary.getPaletteSize() << " " << dictionary.getPalette().size() + pow(2, dictionary.getPaletteSize()+1) - dictionary.getPalette().size() << endl;
+    cout << dictionary.getPaletteSize() << " " << dictionary.getPalette().size() + pow(2, dictionary.getPaletteSize()+1) - dictionary.getPalette().size() << endl;
 
     // Data
     unsigned int record_size =  dictionary.recordLength();
@@ -191,8 +195,9 @@ void GIFencoder::writeSubBlock(const SubBlock &block)
 
     while (total_size > 256)
     {
-        writer.write((256%record_size == 0) ? 256 : 256/record_size * record_size + 1, 8);
-        for (int i = 0; i < 255/record_size; i++)
+        unsigned int size = (256%record_size == 0) ? 256 : 256/record_size * record_size + 1;
+        writer.write(size, 8);
+        for (int i = 0; i < 256/record_size; i++)
         {
             output_struct out = output.front();
             output.erase(output.begin());
@@ -201,16 +206,14 @@ void GIFencoder::writeSubBlock(const SubBlock &block)
         total_size -= 256/record_size * record_size;
     }
 
-    writer.write(total_size, 8);
+    writer.write((output.size()*record_size%8 == 0) ? output.size()*record_size/8 : output.size()*record_size/8 + 1, 8);
 
-//    cout << output.size() << " " << total_size/record_size << endl;
-
-    writer.write(output.size()*record_size, 8);
     while (!output.empty())
     {
         output_struct out = output.front();
         output.erase(output.begin());
         this->writer.write((out.src == DICTIONARY) ? out.index + dictionary.getClear()+2: out.index, record_size);
+//        cout << ((out.src == DICTIONARY) ? out.index + dictionary.getClear()+2: out.index) << endl;
     }
     writer.finish();
     writer.write(0, 8);
