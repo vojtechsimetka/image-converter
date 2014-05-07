@@ -47,29 +47,13 @@ void incBitMapBufferPointer(tBITMAPWRITER *bitMapWriter) {
  */
 void processColor(int color, Mat &bitMap, tRGB *colorTable, tBITMAPWRITER *bitMapWriter) {
 
-    // Tohle je OK
-cout<<"["<<color<<"]"<<" r    "<<colorTable[color].red<<" g    "<<colorTable[color].green<<" b    "<<colorTable[color].blue<<" r    "<<bitMapWriter->actualRow<<" c    "<<bitMapWriter->actualColumn<<endl;
-;
-
     // Tady se to posere
-    //bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[0] = colorTable[color].blue;
-    //bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[1] = colorTable[color].green;
-    //bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[2] = colorTable[color].red;
+    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn).val[0] = colorTable[color].blue;
+    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn).val[1] = colorTable[color].green;
+    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn).val[2] = colorTable[color].red;
 
-    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[0] = 255;
-    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[1] = 0;
-    bitMap.at<cv::Vec3b>(bitMapWriter->actualRow,bitMapWriter->actualColumn)[2] = 0;
-
-	// Save color to BMP output buffer
-    //bmpOutputBuffer[bitMapWriter->actualRow][bitMapWriter->actualColumn].blue = colorTable[color].blue;
-    //bmpOutputBuffer[bitMapWriter->actualRow][bitMapWriter->actualColumn].red = colorTable[color].red;
-    //bmpOutputBuffer[bitMapWriter->actualRow][bitMapWriter->actualColumn].green = colorTable[color].green;
-
-
-	// Increment BMP output buffer pointer
-	incBitMapBufferPointer(bitMapWriter);
-
-
+    // Increment BMP output buffer pointer
+    incBitMapBufferPointer(bitMapWriter);
 }
 
 /**

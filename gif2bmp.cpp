@@ -468,11 +468,11 @@ cv::Mat gif2bmp(FILE *inputFile){
 	}
 
     // Init output matrix
-    Mat bitMap(pic.heightInPixHighByte*256 + pic.heightInPixLowByte, pic.widthInPixHighByte*256 + pic.widthInPixLowByte, CV_32FC1, Scalar(255,255,255));
+    Mat bitMap(pic.heightInPixHighByte*256 + pic.heightInPixLowByte, pic.widthInPixHighByte*256 + pic.widthInPixLowByte, CV_8UC3, Scalar(255,255,255));
 
 	// Get background color
 	if (pic.backgroundColor != -1) {
-        bitMap = Scalar(globalColorTable[pic.backgroundColor].red, globalColorTable[pic.backgroundColor].green, globalColorTable[pic.backgroundColor].blue);
+        //bitMap = Scalar(globalColorTable[pic.backgroundColor].red, globalColorTable[pic.backgroundColor].green, globalColorTable[pic.backgroundColor].blue);
 	}
 
 	// Get gif body

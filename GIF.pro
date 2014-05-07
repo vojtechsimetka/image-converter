@@ -9,7 +9,9 @@ SOURCES += main.cpp \
     bmp.cpp \
     dictionary.cpp \
     gif.cpp \
-    gif2bmp.cpp
+    gif2bmp.cpp \
+    gifencoder.cpp \
+    gifwriter.cpp
 
 HEADERS += \
     arguments.h \
@@ -18,5 +20,9 @@ HEADERS += \
     constant.h \
     dictionary.h \
     gif.h \
-    gif2bmp.h
+    gif2bmp.h \
+    gifencoder.h \
+    subblock.h \
+    gifwriter.h \
+    gifdictionary.h
 

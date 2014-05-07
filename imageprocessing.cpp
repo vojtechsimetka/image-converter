@@ -19,6 +19,8 @@
 #include "constant.h"
 #include <fcntl.h>
 
+
+
 /**
  * @brief Detects if input file is GIF
  * @param filename Filename
@@ -55,12 +57,11 @@ bool ImageProcessing::isGif(const string &filename)
  */
 ImageProcessing::ImageProcessing(const string filename)
 {
-    // TODO: Call GIF load function
-    //if (this->isGif(filename))
+    if (this->isGif(filename))
         this->image = loadGif(filename);
 
-    //else
-      //  this->image = imread(filename);
+    else
+        this->image = imread(filename);
 
     // Failed to load data
     if (this->image.total() == 0)
@@ -118,9 +119,7 @@ void ImageProcessing::save(const string & filename, set<enum img_type> & file_ty
                 break;
 
             case GIF:
-                // TODO: Call GIF save function
-                cerr << "IMPLEMENT GIF SAVE FUNCTION" << endl;
-                // writegif(filename + ".gif", this->image);
+                GIFencoder(filename + ".gif", this->image);
                 break;
 
             case BMP:

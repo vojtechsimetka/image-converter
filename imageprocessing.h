@@ -14,6 +14,7 @@
 #include <cv.h>
 #include <highgui.h>
 #include "arguments.h"
+#include "gifencoder.h"
 
 using namespace cv;
 
