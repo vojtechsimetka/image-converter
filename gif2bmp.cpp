@@ -611,8 +611,8 @@ cv::Mat gif2bmp(FILE *inputFile){
 					}
 				}
 				else {
-					reader.activeColorTable = globalColorTable;
-					reader.activeColorTableSize = pic.globalColorTable;
+                    reader.activeColorTable = globalColorTable;
+                    reader.activeColorTableSize = pic.colorTableLong;
 				}
 
 				reader.dataBlockSize = imageDescriptor.sizeInPixels;

@@ -19,13 +19,13 @@ enum source
 
 struct output_struct
 {
-    source src;
     int index;
+    unsigned int size;
 
-    output_struct(source s, int i)
+    output_struct(int i, unsigned int size)
     {
-        this->src = s;
         this->index = i;
+        this->size = size;
     }
 };
 
@@ -37,7 +37,11 @@ private:
 
     void createSubBlocks(const Mat &image);
     void writeHeader(const Mat &image);
-    void writeSubBlock(const SubBlock &block);
+    void writeSubBlock(SubBlock &block);
+    vector<output_struct> LZW(SubBlock & block);
+    void writeImageDescriptor(SubBlock &block);
+    void writePalette(SubBlock &block);
+    void writeData(vector<output_struct> &output);
 public:
     GIFencoder(const string &filename, const Mat &image);
 };

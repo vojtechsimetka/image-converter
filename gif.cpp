@@ -141,7 +141,7 @@ int getImageData(FILE *inputFile, tGIFREADER *reader, Mat &bitMap, tBITMAPWRITER
 	if (readBitsStreamFromFile (inputFile, reader, &readedBits, subBlockStatus)) {
 		freeDictionary(&dictionary);
 		return EXIT_FAILURE;
-	}
+    }
 
 	// CC code
 	if (readedBits == (u_int32_t)dictionary.clearCode) {}
@@ -619,72 +619,73 @@ printf("	id[RGB]: %d  [%d, %d, %d]\n", i, colorTable[i].red, colorTable[i].green
  */
 int getApplicationExt(FILE *inputFile) {
 
-	cout<<endl<<"Application extension: skipped"<<endl;
+    fprintf(stderr, "%s", "Input file include application extension, whitch is not supported.\n");
+    return EXIT_FAILURE;
 
-	u_int8_t Byte = 0;
-	int readRetVal;
+//    u_int8_t Byte = 0;
+//	int readRetVal;
 
-	readRetVal = readByteFromFile(inputFile, &Byte);
-	if (readRetVal == READ_WRITE_ERR) {
-		fprintf(stderr, "%s", "Can not read input file.");
-		return EXIT_FAILURE;
-	}
-	else if (readRetVal == END_OF_FILE) {
-		fprintf(stderr, "%s", "Incorrect gif file.");
-		return EXIT_FAILURE;
-	}
-	else {
-		// get extension size
-		int appliExtSize = (int)Byte;
+//	readRetVal = readByteFromFile(inputFile, &Byte);
+//	if (readRetVal == READ_WRITE_ERR) {
+//		fprintf(stderr, "%s", "Can not read input file.");
+//		return EXIT_FAILURE;
+//	}
+//	else if (readRetVal == END_OF_FILE) {
+//		fprintf(stderr, "%s", "Incorrect gif file.");
+//		return EXIT_FAILURE;
+//	}
+//	else {
+//		// get extension size
+//		int appliExtSize = (int)Byte;
 
-		// fixed value
-		if (appliExtSize != 11) {
-			fprintf(stderr, "%s", "Incorrect gif file.");
-			return EXIT_FAILURE;
-		}
+//		// fixed value
+//		if (appliExtSize != 11) {
+//			fprintf(stderr, "%s", "Incorrect gif file.");
+//			return EXIT_FAILURE;
+//		}
 
-		// read application identifier and authentication code and block size (last readed byte)
-		for (int i = 0; i < appliExtSize + 1; i++) {
-			readRetVal = readByteFromFile(inputFile, &Byte);
-			if (readRetVal == READ_WRITE_ERR) {
-				fprintf(stderr, "%s", "Can not read input file.");
-				return EXIT_FAILURE;
-			}
-			else if (readRetVal == END_OF_FILE) {
-				fprintf(stderr, "%s", "Incorrect gif file.");
-				return EXIT_FAILURE;
-			}
-			else {
-				// SKIP VALUES
-			}
-		}
-		// get data block size
-		appliExtSize = (int)Byte;
+//		// read application identifier and authentication code and block size (last readed byte)
+//		for (int i = 0; i < appliExtSize + 1; i++) {
+//			readRetVal = readByteFromFile(inputFile, &Byte);
+//			if (readRetVal == READ_WRITE_ERR) {
+//				fprintf(stderr, "%s", "Can not read input file.");
+//				return EXIT_FAILURE;
+//			}
+//			else if (readRetVal == END_OF_FILE) {
+//				fprintf(stderr, "%s", "Incorrect gif file.");
+//				return EXIT_FAILURE;
+//			}
+//			else {
+//				// SKIP VALUES
+//			}
+//		}
+//		// get data block size
+//		appliExtSize = (int)Byte;
 
-		// read data block, last byte must be empty sub block
-		for (int i = 0; i < appliExtSize + 1; i++) {
-			readRetVal = readByteFromFile(inputFile, &Byte);
-			if (readRetVal == READ_WRITE_ERR) {
-				fprintf(stderr, "%s", "Can not read input file.");
-				return EXIT_FAILURE;
-			}
-			else if (readRetVal == END_OF_FILE) {
-				fprintf(stderr, "%s", "Incorrect gif file.");
-				return EXIT_FAILURE;
-			}
-			else {
-				// SKIP VALUES
-			}
-		}
+//		// read data block, last byte must be empty sub block
+//		for (int i = 0; i < appliExtSize + 1; i++) {
+//			readRetVal = readByteFromFile(inputFile, &Byte);
+//			if (readRetVal == READ_WRITE_ERR) {
+//				fprintf(stderr, "%s", "Can not read input file.");
+//				return EXIT_FAILURE;
+//			}
+//			else if (readRetVal == END_OF_FILE) {
+//				fprintf(stderr, "%s", "Incorrect gif file.");
+//				return EXIT_FAILURE;
+//			}
+//			else {
+//				// SKIP VALUES
+//			}
+//		}
 
-		// check last byte value
-		if (Byte != BLOCK_TERMINATOR) {
-			fprintf(stderr, "%s", "Incorrect gif file.");
-			return EXIT_FAILURE;
-		}
-	}
+//		// check last byte value
+//		if (Byte != BLOCK_TERMINATOR) {
+//			fprintf(stderr, "%s", "Incorrect gif file.");
+//			return EXIT_FAILURE;
+//		}
+//	}
 
-	return EXIT_SUCCESS;
+//	return EXIT_SUCCESS;
 }
 
 /**

@@ -27,6 +27,15 @@ GIFencoder::GIFencoder(const string &filename, const Mat &image)
     // Writes header of the gif file
     this->writeHeader(tmp);
 
+    writer.write(0x21, 8);
+    writer.write(0xF9, 8);
+    writer.write(0x04, 8);
+    writer.write(0, 8);
+    writer.write(0, 8);
+    writer.write(0, 8);
+    writer.write(0, 8);
+    writer.write(0, 8);
+
     // Writes all subblocks
     for (vector<SubBlock>::iterator it = this->subimages.begin();
          it != this->subimages.end();
@@ -70,91 +79,100 @@ void GIFencoder::writeHeader(const Mat &image)
  */
 void GIFencoder::createSubBlocks(const Mat &image)
 {
-    for (int y = 0; y < image.rows ; y += 16)
-    {
-        for (int x = 0; x < image.cols; x+= 16)
-        {
-            this->subimages.push_back(
-                SubBlock(image,
-                         y,
-                         x,
-                         (y < image.rows - 16) ? 16 : image.rows - y,
-                         (x < image.cols - 16) ? 16 : image.cols - x));
-        }
-    }
+    this->subimages.push_back(SubBlock(image, 0,0,image.cols, image.rows));
+//    for (int y = 0; y < image.rows ; y += 16)
+//    {
+//        for (int x = 0; x < image.cols; x+= 16)
+//        {
+//            this->subimages.push_back(
+//                SubBlock(image,
+//                         x,
+//                         y,
+//                         (x < (int)(image.cols) - 16) ? 16 : (int)(image.cols) - x,
+//                         (y < (int)(image.rows) - 16) ? 16 : (int)(image.rows) - y));
+//        }
+//    }
 }
 
-void GIFencoder::writeSubBlock(const SubBlock &block)
+vector<output_struct> GIFencoder::LZW(SubBlock & block)
 {
-    GIFdictionary dictionary;
     vector<output_struct> output;
     vector<unsigned int> loaded_pixels;
-    int last_loaded_color = -1;
-    int last_dict_record = -1;
+    output_struct last_found(PALETTE, -1);
 
-    output.push_back(output_struct(PALETTE, 0));
+    // Pushes clear code
+    output.push_back(output_struct(block.getDictionary().getClear(),
+                                   block.getDictionary().getCurrentSize()));
 
+    // Goes through whole image subblock
     for (unsigned int y = 0; y < block.getData().rows; y++)
     {
         for (unsigned int x = 0; x < block.getData().cols; x++)
         {
-            unsigned int current_color = block.getData().at<Vec3b>(y, x).val[0] << 16 |
-                                         block.getData().at<Vec3b>(y, x).val[1] << 8 |
-                                         block.getData().at<Vec3b>(y, x).val[2];
-
-            int index = (dictionary.isInPalette(current_color));
-
-            if (index == -1)
-                index = dictionary.addColor(current_color);
-
-            loaded_pixels.push_back(current_color);
+            // Adds current collor to sequence
+            loaded_pixels.push_back(block.getData().at<Vec3b>(y, x).val[0] << 16 |
+                                    block.getData().at<Vec3b>(y, x).val[1] << 8 |
+                                    block.getData().at<Vec3b>(y, x).val[2]);
 
             // Just one color was loaded, load more
             if (loaded_pixels.size() == 1)
             {
-                last_loaded_color = index;
+                last_found = output_struct(block.getDictionary().findColor(loaded_pixels.back()),
+                                           block.getDictionary().getCurrentSize());
                 continue;
             }
 
-            int record = dictionary.find(loaded_pixels);
+            // Determines index of current sequence
+            int record = block.getDictionary().find(loaded_pixels);
+
+            // Record is in dictionary, continue loading input
             if (record != -1)
             {
-                last_dict_record = record;
+                last_found = output_struct(record, block.getDictionary().getCurrentSize());
                 continue;
             }
 
-            else if (loaded_pixels.size() == 2)
+            // Stores record to output
+            output.push_back(last_found);
+
+            cout << setw(6) << last_found.index << setw(6) << last_found.size << setw(6) << block.dictionary.getLastIndex() << endl;
+
+            // Adds new record to dicionary
+            block.getDictionary().addRecord(loaded_pixels);
+
+            // LZW is too big
+            if (block.getDictionary().getCurrentSize() > 12)
             {
-                output.push_back(output_struct(PALETTE, last_loaded_color));
-                dictionary.addRecord(loaded_pixels);
+                output.push_back(output_struct(block.getDictionary().getClear(), 12));
+                block.getDictionary().clear();
+                block.getDictionary().addRecord(loaded_pixels);
             }
 
-            else
-            {
-                output.push_back(output_struct(DICTIONARY, last_dict_record));
-                dictionary.addRecord(loaded_pixels);
-            }
-
+            // Removes all pixels from loaded sequence except for last one
             unsigned int tmp = loaded_pixels.back();
             loaded_pixels.clear();
             loaded_pixels.push_back(tmp);
 
-            index = (dictionary.isInPalette(tmp));
-
-            if (index == -1)
-                index = dictionary.addColor(tmp);
-
-            last_loaded_color = index;
+            // Determines color of last loaded pixel
+            last_found = output_struct(block.getDictionary().findColor(tmp),
+                                       block.getDictionary().getCurrentSize());
         }
     }
 
-    if (loaded_pixels.size() == 1)
-        output.push_back(output_struct(PALETTE, last_loaded_color));
+    // Stores last record to output
+    if (!loaded_pixels.empty())
+    {
+        output.push_back(last_found);
+        cout << setw(6) << last_found.index << setw(6) << last_found.size << setw(6) << block.dictionary.getLastIndex() << endl;
+    }
 
-    else if (!loaded_pixels.empty())
-        output.push_back(output_struct(DICTIONARY, last_dict_record));
+    // Stores EOI
+    output.push_back(output_struct(block.getDictionary().getEOI(), block.getDictionary().getCurrentSize()));
+    return output;
+}
 
-    // Image Descriptor
+void GIFencoder::writeImageDescriptor(SubBlock &block)
+{
     // Image separator
     this->writer.write(0x2C, 8);
     // Image left
@@ -170,53 +188,130 @@ void GIFencoder::writeSubBlock(const SubBlock &block)
     this->writer.write(block.height, 8);
     this->writer.write(block.height >> 8, 8);
     // Packed field
-    this->writer.write(128 | dictionary.getPaletteSize(), 8);
+    this->writer.write(128 | block.dictionary.getPaletteSize(), 8);
+}
 
-    for (vector<unsigned int>::iterator it = dictionary.getPalette().begin();
-         it != dictionary.getPalette().end();
+void GIFencoder::writePalette(SubBlock &block)
+{
+    // Write color palette
+    for (vector<unsigned int>::iterator it = block.getDictionary().getPalette().begin();
+         it != block.getDictionary().getPalette().end();
          it ++)
         this->writer.write(*it, 24);
+}
 
-    for (int i = pow(2, dictionary.getPaletteSize()+1) - dictionary.getPalette().size(); i > 0 ; i--)
-        this->writer.write(0, 24);
+void GIFencoder::writeData(vector<output_struct> &output)
+{
+    this->writer.writeVals();
 
-    cout << dictionary.getPaletteSize() << " " << dictionary.getPalette().size() + pow(2, dictionary.getPaletteSize()+1) - dictionary.getPalette().size() << endl;
-
-    // Data
-    unsigned int record_size =  dictionary.recordLength();
     // LZW Min code size
-    this->writer.write(record_size, 8);
+    this->writer.write(output.front().size-1, 8);
 
-    // Determines number of data blocks
-    output.push_back(output_struct(PALETTE, dictionary.getEOI()));
-    output.front() = output_struct(PALETTE, dictionary.getClear());
+    unsigned int rest_length = 0;
+    unsigned int rest_of_data = 0;
 
-    unsigned int total_size = output.size()*record_size;
-
-    while (total_size > 256)
-    {
-        unsigned int size = (256%record_size == 0) ? 256 : 256/record_size * record_size + 1;
-        writer.write(size, 8);
-        for (int i = 0; i < 256/record_size; i++)
-        {
-            output_struct out = output.front();
-            output.erase(output.begin());
-            this->writer.write((out.src == DICTIONARY) ? out.index + dictionary.getClear()+2: out.index, record_size);
-        }
-        total_size -= 256/record_size * record_size;
-    }
-
-    writer.write((output.size()*record_size%8 == 0) ? output.size()*record_size/8 : output.size()*record_size/8 + 1, 8);
-
+    // While there is something to write
     while (!output.empty())
     {
-        output_struct out = output.front();
-        output.erase(output.begin());
-        this->writer.write((out.src == DICTIONARY) ? out.index + dictionary.getClear()+2: out.index, record_size);
-//        cout << ((out.src == DICTIONARY) ? out.index + dictionary.getClear()+2: out.index) << endl;
+        // Current length is 0 + rest_length
+        unsigned int length = rest_length;
+
+        // Determines number of bites that can be read
+        bool broken = false;
+        for (vector<output_struct>::iterator it = output.begin();
+             it != output.end();
+             it++)
+        {
+            if (length + (*it).size > 255 * 8)
+            {
+                if (length == 2030)
+                    cerr << "blbost " << (*it).size << endl;
+                broken = true;
+                break;
+            }
+
+            length += (*it).size;
+        }
+
+        // Size of data in bytes
+        unsigned int velikost = 0;
+        if (broken)
+        {
+            velikost = 255;
+        }
+        else if ((length)%8 == 0)
+        {
+            velikost = (length)/8;
+            cerr << "presne" << endl;
+        }
+
+        else
+        {
+            velikost = (length)/8+1;
+            cerr << "nepresne" << endl;
+        }
+        writer.writeOut(length, velikost);
+        writer.write(velikost, 8);
+        cout << "za" << endl;
+
+        int i = 0;
+        if (rest_length != 0)
+        {
+            writer.write(rest_of_data, rest_length);
+            i+= rest_length;
+        }
+
+        for (; i < length;)
+        {
+            if (output.empty())
+                throw "Not all data was written";
+
+            i += output.front().size;
+            this->writer.write(output.front().index, output.front().size);
+            output.erase(output.begin());
+            cout << dec << setw(6) << output.front().index << setw(6) << output.front().size << endl;
+        }
+        cerr << length << "b2 " << i << " " << output.front().size << endl;
+
+        // Splits last record to next frame
+        if (output.size() != 0 && (2040 - length != 0))
+        {
+            unsigned int to_be_written = 2040 - length;
+            i+= to_be_written;
+            rest_length = output.front().size - to_be_written;
+            length = rest_length;
+            rest_of_data = output.front().index >> to_be_written;
+            writer.write(output.front().index, to_be_written);
+            output.erase(output.begin());
+            cout << setw(6) << output.front().index << setw(6) << output.front().size <<  " Rozdeleno mezi framy" << endl;
+        }
+
+        else
+        {
+            rest_length = 0;
+            rest_of_data = 0;
+        }
+        cerr << i << endl;
     }
     writer.finish();
     writer.write(0, 8);
-//    writer.write(dictionary.getEOI(), record_size);
-//    writer.finish();
+}
+
+void GIFencoder::writeSubBlock(SubBlock &block)
+{
+    // Encodes using LZW
+    vector<output_struct> output = this->LZW(block);
+
+    // No data
+    if (output.empty())
+        return;
+
+    // Writes image Descriptor
+    this->writeImageDescriptor(block);
+
+    // Writes color palette
+    this->writePalette(block);
+
+    // Writes data
+    this->writeData(output);
 }

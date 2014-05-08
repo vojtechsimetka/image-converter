@@ -2,23 +2,59 @@
 #define GIFDICTIONARY_H
 
 #include <iostream>
-#include<vector>
+#include <set>
 
 using namespace std;
 
 class GIFdictionary
 {
 private:
-    vector<unsigned int>palette;
+    vector<unsigned int> palette;
     vector<vector<unsigned int> >dictionary;
+    unsigned int sz;
+    unsigned int palette_size;
+    unsigned int last_record;
+
 public:
-    inline int addColor(unsigned int color)
+    GIFdictionary()
     {
-        this->palette.push_back(color);
-        return this->palette.size() -1;
+        this->sz = 0;
+        this->palette_size = 0;
+        this->last_record = -1;
     }
 
-    inline int isInPalette(unsigned int color)
+    inline void addColors(set<unsigned int> & colors)
+    {
+        // Saves colors
+        for (set<unsigned int>::iterator it = colors.begin();
+             it != colors.end();
+             it++)
+        {
+            this->palette.push_back(*it);
+            this->last_record++;
+
+            if (this->last_record > pow(2, this->sz+1))
+                this->sz++;
+        }
+
+        while (this->sz < 1)
+            this->sz++;
+
+        // Fills rest with black color
+        for (;this->last_record < pow(2, this->sz+1)-1;)
+        {
+            this->last_record++;
+            this->palette.push_back(0);
+        }
+
+        this->palette_size = this->sz;
+
+        // Clear code and EOI
+        this->last_record+=2;
+        this->sz++;
+    }
+
+    inline int findColor(unsigned int color)
     {
         unsigned int i = 0;
         for (vector<unsigned int>::iterator it = this->palette.begin();
@@ -39,7 +75,7 @@ public:
              it ++, i++)
         {
             if (record == (*it))
-                return i;
+                return i + this->palette.size()+2;
         }
 
         return -1;
@@ -48,47 +84,49 @@ public:
     inline int addRecord(vector<unsigned int> & record)
     {
         this->dictionary.push_back(vector<unsigned int>(record));
-        return this->dictionary.size() -1;
+        this->last_record++;
+
+        if (this->last_record >= pow(2, this->sz+1))
+            this->sz++;
+
+        return this->last_record;
     }
 
-    inline unsigned int size()
+    inline unsigned int getClear() const
     {
-        return this->dictionary.size() + this->palette.size() + 2;
+        return this->palette.size();
     }
 
-    inline unsigned int recordLength()
+    inline unsigned int getEOI() const
     {
-        unsigned int i = 0;
-        unsigned int out = 2;
-        for (; out < this->size(); i++)
-            out *=2;
-
-        return i;
+        return this->palette.size()+1;
     }
 
-    inline unsigned int getClear()
+    inline unsigned int getPaletteSize() const
     {
-        return pow(2, this->getPaletteSize()+1);
-    }
-
-    inline unsigned int getEOI()
-    {
-        return pow(2, this->getPaletteSize()+1) + 1;
-    }
-
-    inline unsigned int getPaletteSize()
-    {
-        unsigned int i = 0;
-        unsigned int out = 2;
-        for (; out < this->palette.size(); i++)
-            out *=2;
-
-        return i;
+        return this->palette_size;
     }
 
     inline vector<unsigned int> & getPalette()
     {
         return this->palette;
+    }
+
+    inline unsigned int getCurrentSize()
+    {
+        return this->sz+1;
+    }
+
+    inline unsigned int getLastIndex()
+    {
+        return this->last_record;
+    }
+
+    inline void clear()
+    {
+        this->dictionary.clear();
+        this->last_record = this->palette.size()+1;
+        this->sz = palette_size + 1;
     }
 };
 

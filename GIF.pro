@@ -1,3 +1,4 @@
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.9
 TEMPLATE = app
 CONFIG += console
 CONFIG -= app_bundle
@@ -26,3 +27,16 @@ HEADERS += \
     gifwriter.h \
     gifdictionary.h
 
+LIBS += -L/usr/local/lib \
+    -lopencv_core \
+    -lopencv_imgproc \
+    -lopencv_highgui \
+    -lopencv_objdetect \
+    -lopencv_calib3d
+
+INCLUDEPATH += /usr/local/include/opencv
+DEPENDPATH += /usr/local/include/opencv/include
+
+INCLUDEPATH += $$PWD/../../../usr/local/include
+DEPENDPATH += $$PWD/../../../usr/local/include
+DEPENDPATH += $$PWD/../../../usr/local/lib
