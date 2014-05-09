@@ -102,7 +102,7 @@ int getImageData(FILE *inputFile, tGIFREADER *reader, Mat &bitMap, tBITMAPWRITER
 	int K = 0;				 // First color index to color table of color list
 	int firstCodeAfterCC = 0;// Control values
 	int subBlockStatus = UNFINISHED_SUBBLOCK;
-
+    reader->usedBitsFromByte1LastTime = -1;
 	// Get LZW size
 	readRetVal = readByteFromFile(inputFile, &Byte);
 	if (readRetVal == READ_WRITE_ERR) {
@@ -371,26 +371,20 @@ int getImageData(FILE *inputFile, tGIFREADER *reader, Mat &bitMap, tBITMAPWRITER
 				// Full dictionary?
 				if (dictionary.firstEmptyCode == DICTIONARY_FULL) {
 
-					// Expecting clean code
-					if (readedBits == (u_int32_t)dictionary.clearCode) {
+                    // Expecting clean code
+                    if (readedBits == (u_int32_t)dictionary.clearCode) {
 
-						// Restart process
-						reader->lzwSize = reader->initLzwSize;
-						firstCodeAfterCC = 1;
+                        // Restart process
+                        reader->lzwSize = reader->initLzwSize;
+                        firstCodeAfterCC = 1;
 
-						// Init dictionary
-						if(reInitDictionary(&dictionary, reader)) {
-							freeDictionary(&dictionary);
-							return EXIT_FAILURE;
-						}
-						continue;
-					}
-					// Wrong gif format
-					else {
-						fprintf(stderr, "%s", "Incorrect gif file.");
-						freeDictionary(&dictionary);
-						return EXIT_FAILURE;
-					}
+                        // Init dictionary
+                        if(reInitDictionary(&dictionary, reader)) {
+                            freeDictionary(&dictionary);
+                            return EXIT_FAILURE;
+                        }
+                        continue;
+                    }
 				}
 
 				// Last code in data sub block
