@@ -114,14 +114,6 @@ vector<output_struct> GIFencoder::LZW(SubBlock & block)
                                     block.getData().at<Vec3b>(y, x).val[1] << 8 |
                                     block.getData().at<Vec3b>(y, x).val[2]);
 
-            if (block.dictionary.cleared)
-            {
-                cerr << endl << "Nacetl jsem barvu s indexem " << block.getDictionary().findColor(loaded_pixels.back()) << endl;
-                for (int i = 0; i < loaded_pixels.size(); i++)
-                    cerr << block.getDictionary().findColor(loaded_pixels[i]) << ",";
-                cerr << endl;
-            }
-
             // Just one color was loaded, load more
             if (loaded_pixels.size() == 1)
             {
@@ -136,24 +128,13 @@ vector<output_struct> GIFencoder::LZW(SubBlock & block)
             // Record is in dictionary, continue loading input
             if (record != -1)
             {
-                if (block.dictionary.cleared)
-                {
-                    cerr << "Nasel jsem zaznam ve slovniku s indexem " << record << " pro barvy: ";
-                    for (int i = 0; i < loaded_pixels.size(); i++)
-                        cerr << block.getDictionary().findColor(loaded_pixels[i]) << ",";
-                    cerr << endl;
-                }
-
                 last_found = output_struct(record, block.getDictionary().getCurrentSize());
                 continue;
             }
 
             // Stores record to output
             output.push_back(last_found);
-            if (block.dictionary.cleared)
-                cerr << "Zapsal jsem: " << last_found.index << endl;
 
-            cout << setw(6) << last_found.index << setw(6) << last_found.size << setw(6) << block.dictionary.getLastIndex() << endl;
 
             // Adds new record to dicionary
             block.getDictionary().addRecord(loaded_pixels);
@@ -163,7 +144,6 @@ vector<output_struct> GIFencoder::LZW(SubBlock & block)
             {
                 output.push_back(output_struct(block.getDictionary().getClear(), 12));
                 block.getDictionary().clear();
-//                block.getDictionary().addRecord(loaded_pixels);
             }
 
             // Removes all pixels from loaded sequence except for last one
@@ -179,10 +159,7 @@ vector<output_struct> GIFencoder::LZW(SubBlock & block)
 
     // Stores last record to output
     if (!loaded_pixels.empty())
-    {
         output.push_back(last_found);
-        cout << setw(6) << last_found.index << setw(6) << last_found.size << setw(6) << block.dictionary.getLastIndex() << endl;
-    }
 
     // Stores EOI
     output.push_back(output_struct(block.getDictionary().getEOI(), block.getDictionary().getCurrentSize()));
@@ -220,8 +197,6 @@ void GIFencoder::writePalette(SubBlock &block)
 
 void GIFencoder::writeData(vector<output_struct> &output)
 {
-    this->writer.writeVals();
-
     // LZW Min code size
     this->writer.write(output.front().size-1, 8);
 
@@ -252,21 +227,15 @@ void GIFencoder::writeData(vector<output_struct> &output)
         // Size of data in bytes
         unsigned int velikost = 0;
         if (broken)
-        {
             velikost = 255;
-        }
+
         else if ((length)%8 == 0)
-        {
             velikost = (length)/8;
-        }
 
         else
-        {
             velikost = (length)/8+1;
-        }
-        writer.writeOut(length, velikost);
+
         writer.write(velikost, 8);
-        cout << "za" << endl;
 
         int i = 0;
         if (rest_length != 0)
@@ -283,7 +252,6 @@ void GIFencoder::writeData(vector<output_struct> &output)
             i += output.front().size;
             this->writer.write(output.front().index, output.front().size);
             output.erase(output.begin());
-            cout << dec << setw(6) << output.front().index << setw(6) << output.front().size << endl;
         }
 
         // Splits last record to next frame
@@ -296,7 +264,6 @@ void GIFencoder::writeData(vector<output_struct> &output)
             rest_of_data = output.front().index >> to_be_written;
             writer.write(output.front().index, to_be_written);
             output.erase(output.begin());
-            cout << setw(6) << output.front().index << setw(6) << output.front().size <<  " Rozdeleno mezi framy" << endl;
         }
 
         else
@@ -304,7 +271,6 @@ void GIFencoder::writeData(vector<output_struct> &output)
             rest_length = 0;
             rest_of_data = 0;
         }
-        cerr << i << endl;
     }
     writer.finish();
     writer.write(0, 8);

@@ -5,7 +5,7 @@
 # @author: xsirok07
 
 PROGRAM=ImageConvertor
-ARCHIVE=xsimet00.zip
+ARCHIVE=xsimet00_xsirok07_xskota05.zip
 
 CC=g++
 CFLAGS=-Wall -O3 -v `pkg-config --cflags opencv` -I/usr/local/include -lopencv_core -lopencv_imgproc -lopencv_highgui
@@ -39,7 +39,7 @@ run: $(PROGRAM)
 # Pack
 pack: clean
 	@rm -f $(ARCHIVE)
-	zip -r $(ARCHIVE) *.h *.cpp Makefile README documentation.pdf $(DOXCONF)
+	zip -r $(ARCHIVE) *.h *.cpp Makefile README dokumentace.pdf $(DOXCONF)
 
 # Clean
 clean:

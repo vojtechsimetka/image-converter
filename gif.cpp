@@ -370,7 +370,7 @@ int getImageData(FILE *inputFile, tGIFREADER *reader, Mat &bitMap, tBITMAPWRITER
                 }
                 // Change block status
                 subBlockStatus = UNFINISHED_SUBBLOCK;
-printf("+++%d %d\n",readedBits, reader->lzwSize);fflush(stdout);
+//                printf("+++%d %d\n",readedBits, reader->lzwSize);fflush(stdout);
                 // Full dictionary?
                 //if (dictionary.firstEmptyCode == DICTIONARY_FULL) {
 
@@ -380,7 +380,7 @@ printf("+++%d %d\n",readedBits, reader->lzwSize);fflush(stdout);
                         // Restart process
                         reader->lzwSize = reader->initLzwSize;
                         firstCodeAfterCC = 1;
-printf("%d \n",reader->lzwSize);
+//printf("%d \n",reader->lzwSize);
 fflush(stdout);
                         // Init dictionary
                         if(reInitDictionary(&dictionary, reader)) {
@@ -416,13 +416,13 @@ fflush(stdout);
                 else {
                     // Check the existence of the code in the dictionary
                     if (codeInDictionary(&dictionary, &readedBits)) { // Code is not in dictionary
-printf("***+**\n");fflush(stdout);printf("%d %d\n", dictionary.previousCode, dictionary.firstEmptyCode);fflush(stdout);
+//printf("***+**\n");fflush(stdout);printf("%d %d\n", dictionary.previousCode, dictionary.firstEmptyCode);fflush(stdout);
                         // Get first index of CODE-1
                         K = dictionary.colors[dictionary.previousCode].first->colorTableIndex;
-printf("%d\n", dictionary.previousCode);fflush(stdout);
+//printf("%d\n", dictionary.previousCode);fflush(stdout);
                         // Process CODE-1 record
                         processColorList(&(dictionary.colors[dictionary.previousCode]), bitMap, reader->activeColorTable, bitMapWriter);
-printf("**++++***\n");fflush(stdout);
+//printf("**++++***\n");fflush(stdout);
                         // List length pixels processed
                         processedPixels += listLength(&(dictionary.colors[dictionary.previousCode]));
 
@@ -585,7 +585,7 @@ printf("**++++***\n");fflush(stdout);
  */
 int getColorTable(FILE *gifFile, tRGB colorTable [], int colorTableSize) {
 
-cout<<endl<<"Reading color table:"<<endl;
+//cout<<endl<<"Reading color table:"<<endl;
     u_int8_t Byte = 0;
     int readRetVal = 0;
 
@@ -612,7 +612,7 @@ cout<<endl<<"Reading color table:"<<endl;
 
 
         }
-printf("	id[RGB]: %d  [%d, %d, %d]\n", i, colorTable[i].red, colorTable[i].green, colorTable[i].blue);
+//printf("	id[RGB]: %d  [%d, %d, %d]\n", i, colorTable[i].red, colorTable[i].green, colorTable[i].blue);
 fflush(stdout);
     }
     return EXIT_SUCCESS;
@@ -706,7 +706,7 @@ int getApplicationExt(FILE *inputFile) {
  */
 int getCommentExt(FILE *inputFile) {
 
-cout<<endl<<"Comment extension: skipped"<<endl;
+//cout<<endl<<"Comment extension: skipped"<<endl;
 
     u_int8_t Byte = 0;
     int readRetVal;
@@ -758,7 +758,7 @@ cout<<endl<<"Comment extension: skipped"<<endl;
  */
 int getPlainTextExt(FILE *inputFile) {
 
-cout<<endl<<"Plain text extension: skipped"<<endl;
+//cout<<endl<<"Plain text extension: skipped"<<endl;
 
     fprintf(stderr, "%s", "Plain text extension is not supported.");
     return EXIT_FAILURE;
@@ -835,7 +835,7 @@ int getImageDescriptor(FILE *gifFile, tIMAGE_DESCRIPTOR *imageDescriptor) {
     int readRetVal;
     int tmp = 0;
 
-    cout<<endl<<"Image descriptor:"<<endl;
+//    cout<<endl<<"Image descriptor:"<<endl;
 
     // Get image descriptor block
     for (int i = 0; i < IMAGE_DESCRIPTOR_SIZE - 1; i++) {
@@ -891,16 +891,16 @@ int getImageDescriptor(FILE *gifFile, tIMAGE_DESCRIPTOR *imageDescriptor) {
     // get data block size in pixels
     imageDescriptor->sizeInPixels = (imageDescriptor->widthHighByte*256 + imageDescriptor->widthLowByte) * (imageDescriptor->heightHighByte*256 + imageDescriptor->heightLowByte);
 
-cout<<"	Left position: 		 "<<(imageDescriptor->leftPosHighByte*255 + imageDescriptor->leftPosLowByte)<<endl;
-cout<<"	Top position:  		 "<<(imageDescriptor->topPosHighByte*255 + imageDescriptor->topPosLowByte)<<endl;
-cout<<"	Width:         		 "<<(imageDescriptor->widthHighByte*255 + imageDescriptor->widthLowByte)<<endl;
-cout<<"	Height:        		 "<<(imageDescriptor->heightHighByte*255 + imageDescriptor->heightLowByte)<<endl;
-if (imageDescriptor->localColorTableFlag)
-    cout<<"	Local color table:       yes"<<endl;
-else
-    cout<<"	Local color table:       no"<<endl;
-cout<<"	Local color size :       "<<(imageDescriptor->localColorTableSize)<<endl;
-cout<<"	Block size in pix :      "<<(imageDescriptor->sizeInPixels)<<endl<<endl;
+//cout<<"	Left position: 		 "<<(imageDescriptor->leftPosHighByte*255 + imageDescriptor->leftPosLowByte)<<endl;
+//cout<<"	Top position:  		 "<<(imageDescriptor->topPosHighByte*255 + imageDescriptor->topPosLowByte)<<endl;
+//cout<<"	Width:         		 "<<(imageDescriptor->widthHighByte*255 + imageDescriptor->widthLowByte)<<endl;
+//cout<<"	Height:        		 "<<(imageDescriptor->heightHighByte*255 + imageDescriptor->heightLowByte)<<endl;
+//if (imageDescriptor->localColorTableFlag)
+//    cout<<"	Local color table:       yes"<<endl;
+//else
+//    cout<<"	Local color table:       no"<<endl;
+//cout<<"	Local color size :       "<<(imageDescriptor->localColorTableSize)<<endl;
+//cout<<"	Block size in pix :      "<<(imageDescriptor->sizeInPixels)<<endl<<endl;
     return EXIT_SUCCESS;
 }
 
@@ -911,7 +911,7 @@ cout<<"	Block size in pix :      "<<(imageDescriptor->sizeInPixels)<<endl<<endl;
  * @return 0 on success (supported GIF version), 1 on failure
  */
 int checkGifVersion(FILE *gifFile) {
-cout<<endl<<"Gif version: ";
+//cout<<endl<<"Gif version: ";
     u_int8_t Byte = 0;
     int readRetVal;
 
@@ -966,7 +966,7 @@ cout<<endl<<"Gif version: ";
             }
         }
     }
-cout<<"GIF89a"<<endl;
+//cout<<"GIF89a"<<endl;
     return EXIT_SUCCESS;
 }
 
@@ -978,7 +978,7 @@ cout<<"GIF89a"<<endl;
  * @return 0 on success (supported GIF version), 1 on failure
  */
 int parseGifHeader(FILE *gifFile, tPIC_PROPERTY *pic) {
-cout<<endl<<"GIF header: "<<endl;
+//cout<<endl<<"GIF header: "<<endl;
     u_int8_t Byte = 0;
     int readRetVal;
     int tmp = 0;
@@ -1032,14 +1032,14 @@ cout<<endl<<"GIF header: "<<endl;
     }
 
 
-cout<<"	Width:         		 "<<(pic->widthInPixHighByte*255 + pic->widthInPixLowByte)<<endl;
-cout<<"	Height:        		 "<<(pic->heightInPixHighByte*255 + pic->heightInPixLowByte)<<endl;
-cout<<"	Bits per color channel:	 8"<<endl;
-if (pic->globalColorTable)
-    cout<<"	Global color table:      yes"<<endl;
-else
-    cout<<"	Global color table:      no"<<endl;
-cout<<"	Global color size :      "<<pic->colorTableLong<<endl;
+//cout<<"	Width:         		 "<<(pic->widthInPixHighByte*255 + pic->widthInPixLowByte)<<endl;
+//cout<<"	Height:        		 "<<(pic->heightInPixHighByte*255 + pic->heightInPixLowByte)<<endl;
+//cout<<"	Bits per color channel:	 8"<<endl;
+//if (pic->globalColorTable)
+//    cout<<"	Global color table:      yes"<<endl;
+//else
+//    cout<<"	Global color table:      no"<<endl;
+//cout<<"	Global color size :      "<<pic->colorTableLong<<endl;
 
     return EXIT_SUCCESS;
 }

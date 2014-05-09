@@ -16,13 +16,11 @@ private:
     unsigned int last_record;
 
 public:
-    bool cleared;
     GIFdictionary()
     {
         this->sz = 0;
         this->palette_size = 0;
         this->last_record = -1;
-        this->cleared = false;
     }
 
     inline void addColors(set<unsigned int> & colors)
@@ -71,8 +69,6 @@ public:
 
     inline int find(vector<unsigned int> & record)
     {
-//        cerr << "velikost slovniku pri find " << this->dictionary.size() << endl;
-
         unsigned int i = 0;
         for (vector<vector<unsigned int> >::iterator it = this->dictionary.begin();
              it != this->dictionary.end();
@@ -92,8 +88,6 @@ public:
 
         if (this->last_record >= pow(2, this->sz+1))
             this->sz++;
-        if (cleared)
-            cerr << "Vlozil jsem do slovniku, posledni zaznam: " << this->last_record << " velikost slovniku " << this->dictionary.size() << endl;
 
         return this->last_record;
     }
@@ -133,9 +127,6 @@ public:
         this->dictionary.clear();
         this->last_record = this->palette.size() + 1;
         this->sz = palette_size + 1;
-//        this->cleared = true;
-
-//        cerr << "LZW " << this->last_record << endl;
     }
 };
 
