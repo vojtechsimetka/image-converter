@@ -202,6 +202,7 @@ int initDictionary (tDICTIONARY *dictionary, tGIFREADER *reader) {
 				break;
 		default:
 				fprintf(stderr, "%s", "Unsupported LZW size.");
+                cerr << reader->lzwSize << endl;
 				return EXIT_FAILURE;
 	}
 
