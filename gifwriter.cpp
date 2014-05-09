@@ -7,7 +7,7 @@ GIFwriter::GIFwriter(const string & filename)
     this->overflow = 0;
     this->data = 0;
 
-    this->file.open (filename, ios::out | ios::binary);
+    this->file.open (filename.c_str(), ios::out | ios::binary);
 
     if (file.bad())
         throw "Unable to open output gif file";
